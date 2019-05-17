@@ -1,13 +1,11 @@
-##!/usr/bin/ash
-#!/bin/bash
-
-echo "USE ASH IN INTRAMFS HOOK"
+#!/usr/bin/ash
+##!/bin/bash
 
 updateTargetDir=/mnt/home/updateWorkDir
 updateTargetFile=${updateTargetDir}/update.tar
 updateSourceFile=/mnt/usb/update.tar
 updateBlob=${updateTargetDir}/update/NonLinux.tar.gz
-IP=192.168.0.1
+IP=192.168.10.10
 
 try_apply_blob() {
     echo "Trying update blob..."
@@ -116,7 +114,3 @@ run_hook() {
 	return
     fi
 }
-
-echo "REMOVE NEXT LINE FOR INITRAMFS HOOK"
-
-run_hook
