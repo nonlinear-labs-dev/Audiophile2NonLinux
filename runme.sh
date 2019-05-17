@@ -6,7 +6,7 @@ if [ $(fdisk -l /dev/sda | wc -l) != "4" ]
 curl "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/blob/master/sda.sfdisk" | sfdisk /dev/sda
 
 
-mkfs.ext4 /dev/sdXX
+# mkfs.ext4 /dev/sdXX
 # mount /dev/sdXX /mnt
 # time cp -ax / /mnt
 # arch-chroot /mnt /bin/bash
