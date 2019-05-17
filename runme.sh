@@ -27,6 +27,8 @@ echo "Tweak AP Linux:"
 sed -i 's/read.*username/username=sscl/' /etc/apl-files/runme.sh
 sed -i 's/read.*password/password=sscl/' /etc/apl-files/runme.sh
 sed -i 's/pacman -U/pacman --noconfirm -U/' /etc/apl-files/runme.sh
+sed -i 's/Required DatabaseOptional/Never/' /etc/pacman.conf
+sed -i 's/Server.*mettke/#/' /etc/pacman.d/mirrorlist
 
 echo "Copy initial system:"
 cp -ax / /mnt
