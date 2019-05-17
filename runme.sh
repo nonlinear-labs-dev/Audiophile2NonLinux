@@ -27,14 +27,14 @@ echo "Copy initial system:"
 cp -ax / /mnt
 
 echo "Do APLinux stuff:"
-arch-root /mnt /bin/bash -c "cd /etc/apl-files && ./runme.sh"
+arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./runme.sh"
 
 echo "Install grub:"
-arch-root /mnt /bin/bash -c "grub-install --target=i386-pc /dev/sda"
-arch-root /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
+arch-chroot /mnt /bin/bash -c "grub-install --target=i386-pc /dev/sda"
+arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 
 echo "Configure autologin:"
-arch-root /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
+arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
 
 echo "Generate fstab:"
 genfstab -U /mnt >> /mnt/etc/fstab
