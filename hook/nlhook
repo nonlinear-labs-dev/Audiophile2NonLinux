@@ -76,7 +76,7 @@ mount_and_try_applying_update() {
 
 try_update_from_network() {
     echo "Trying update from network..."
-    wget ${IP}/update.tar -O ${updateTargetFile}
+    wget ${IP}/update.tar --timeout=1 -O ${updateTargetFile}
     try_apply_update
     res=$?
     return ${res}
