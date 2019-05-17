@@ -1,14 +1,32 @@
 #!/bin/sh
 
-echo "Starting transormation of AP Linux into Nonlinux..."
+echo "Starting transormation of AP Linux into Nonlinux:"
 
-if [ fdisk -l /dev/sda | grep /dev/sda1 ]
+fdisk -l /dev/sda | grep "/dev/sda[0-9]"
+
+if [ $? -eq 0 ]
 then
  echo "/dev/sda is already partitioned - exit" && exit 1
 fi
  
-echo "Partitioning /dev/sda"
+echo "Partitioning /dev/sda:"
 curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/sda.sfdisk" | sfdisk /dev/sda
+
+echo "Creating filesystems:"
+mkfs.ext4 /dev/sda1
+mkfs.ext4 /dev/sda2
+mkfs.ext4 /dev/sda3
+mkfs.ext4 /dev/sda4
+
+echo "Mounting root and boot partitions:"
+mount /dev/sda2 /mnt
+mkdir -p /mnt/boot
+mount /dev/sda1 /mnt/boot
+
+echo "Copy initial system:"
+cp -ax / /mnt
+
+
 
 echo "Done."
 
