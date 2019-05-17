@@ -26,22 +26,16 @@ mount /dev/sda1 /mnt/boot
 echo "Copy initial system:"
 cp -ax / /mnt
 
+echo "Do APLinux stuff:"
+arch-root /mnt /bin/bash -c "cd /etc/apl-files && ./runme.sh"
 
+echo "Install grub:"
+arch-root /mnt /bin/bash -c "grub-install --target=i386-pc /dev/sda"
+arch-root /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 
-echo "Done."
+echo "Configure autologin:"
+arch-root /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
 
-# mkfs.ext4 /dev/sdXX
-# mount /dev/sdXX /mnt
-# time cp -ax / /mnt
-# arch-chroot /mnt /bin/bash
-# cd /etc/apl-files
-# ./runme.sh
-# grub-install --target=i386-pc /dev/sdX 
-# grub-mkconfig -o /boot/grub/grub.cfg
-# passwd root
-# ln -s /usr/share/zoneinfo/Europe/Dublin /etc/localtime
-# hwclock --systohc --utc
-# ./autologin.sh
-# exit
-# genfstab -U /mnt >> /mnt/etc/fstab
-# reboot
+echo "Generate fstab:"
+genfstab -U /mnt >> /mnt/etc/fstab
+
