@@ -45,6 +45,8 @@ arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
 
 echo "Remove unnecessary packages:"
 arch-chroot /mnt /bin/bash -c "pacman -Rcs xorg gnome freetype2 ffmpeg ffmpeg2.8 man-db man-pages"
+arch-chroot /mnt /bin/bash -c "pacman -S cpupower"
+arch-chroot /mnt /bin/bash -c "pacman -Suy --noconfirm"
 
 echo "Generate fstab:"
 genfstab -U /mnt >> /mnt/etc/fstab
