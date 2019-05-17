@@ -23,6 +23,10 @@ mount /dev/sda2 /mnt
 mkdir -p /mnt/boot
 mount /dev/sda1 /mnt/boot
 
+echo "Tweak AP Linux:"
+sed -i 's/read.*username/username=sscl/' /etyc/apl-files/runme.sh
+sed -i 's/read.*password/password=sscl/' /etyc/apl-files/runme.sh
+
 echo "Copy initial system:"
 cp -ax / /mnt
 
