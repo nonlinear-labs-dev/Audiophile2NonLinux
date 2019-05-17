@@ -3,6 +3,7 @@
 echo "Starting transormation of AP Linux into Nonlinux..."
 
 if [ $(fdisk -l /dev/sda | wc -l) != "4" ]
+then
  echo "/dev/sda is already partitioned - exit" && exit 1
 fi
  
