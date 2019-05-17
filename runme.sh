@@ -3,7 +3,7 @@
 if [ $(fdisk -l /dev/sda | wc -l) != "4" ]
  echo "/dev/sda is already partitioned - exit" && exit 1
 
-curl "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/sda.sfdisk" | sfdisk /dev/sda
+curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/sda.sfdisk" | sfdisk /dev/sda
 
 
 # mkfs.ext4 /dev/sdXX
