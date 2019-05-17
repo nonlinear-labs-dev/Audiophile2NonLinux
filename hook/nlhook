@@ -1,0 +1,122 @@
+##!/usr/bin/ash
+#!/bin/bash
+
+echo "USE ASH IN INTRAMFS HOOK"
+
+updateTargetDir=/mnt/home/updateWorkDir
+updateTargetFile=${updateTargetDir}/update.tar
+updateSourceFile=/mnt/usb/update.tar
+updateBlob=${updateTargetDir}/update/NonLinux.tar.gz
+IP=192.168.0.1
+
+try_apply_blob() {
+    echo "Trying update blob..."
+    
+    if [ -f ${updateBlob} ]
+    then
+	echo "Nonlinux image found"
+	checksum=`sha256sum ${updateBlob} | cut -d " " -f 1`
+	echo "Checksum is ${checksum}"
+	checksumFile=${updateTargetDir}/update/${checksum}.sign
+	echo "Checksum file is ${checksumFile}"
+	
+	if [ -f ${checksumFile} ]
+	then
+	    echo "Found checksum, applying image"
+	    
+	    return 1
+	else
+	    echo "Did not find checksum, rejecting image"
+	fi
+    else
+	echo "No Update blob exists."
+    fi
+    return 0;
+}
+
+try_apply_backdoor() {
+    echo "Try backdoor..."
+    echo "No backdoor exists."
+    return 0
+}
+
+try_apply_update() {
+    if cd ${updateTargetDir} && tar xf ./update.tar;
+    then
+	echo "Update tar found."
+    else
+	echo "This is not an update.tar"
+	return 0
+    fi	
+
+    try_apply_blob
+    if [ "$?" -eq "1" ]
+    then
+	echo "Applied blob."
+	return 1
+    fi
+
+    try_apply_backdoor
+    return "$?"
+}
+
+mount_and_try_applying_update() {
+    res=0
+    mkdir -p /mnt/usb
+    if mount $1 /mnt/usb; then
+	if [ -f ${updateSourceFile} ]
+	then
+	    echo "Found update file"
+	    cp ${updateSourceFile} ${updateTargetFile}
+	    try_apply_update 
+	    res=$?
+	fi
+	umount -f /mnt/usb
+    fi
+    return ${res}
+}
+
+try_update_from_network() {
+    echo "Trying update from network..."
+    wget ${IP}/update.tar -O ${updateTargetFile}
+    try_apply_update
+    res=$?
+    return ${res}
+}
+
+try_update_from_usb() {
+    devices=`blkid -o list | grep "(not mounted)" | grep -o "^[^ ]*"`
+    for device in ${devices}; do
+	mount_and_try_applying_update ${device}
+    done
+}
+
+run_hook() {
+    mkdir -p /mnt/home
+    mount /dev/sda3 /mnt/home
+
+    mkdir -p ${updateTargetDir}
+
+    rm -rf ${updateFile}
+    rm -rf ${updateTargetDir}/*
+
+    try_update_from_network
+
+    if [ "$?" -eq "1" ]; then
+	echo "Network update applied!"
+	return
+    else
+	echo "No Network update applied."
+    fi
+
+    try_update_from_usb
+    
+    if [ "$?" -eq "1" ]; then
+	echo "USB update applied!"
+	return
+    fi
+}
+
+echo "REMOVE NEXT LINE FOR INITRAMFS HOOK"
+
+run_hook
