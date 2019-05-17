@@ -26,6 +26,7 @@ mount /dev/sda1 /mnt/boot
 echo "Tweak AP Linux:"
 sed -i 's/read.*username/username=sscl/' /etc/apl-files/runme.sh
 sed -i 's/read.*password/password=sscl/' /etc/apl-files/runme.sh
+sed -i 's/pacman -U/pacman --noconfirm -U' /etc/apl-files/runme.sh
 
 echo "Copy initial system:"
 cp -ax / /mnt
@@ -39,6 +40,9 @@ arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 
 echo "Configure autologin:"
 arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
+
+echo "Remove unnecessary packages:"
+arch-chroot /mnt /bin/bash -c "pacman -Rcs xorg gnome freetype2 ffmpeg ffmpeg2.8 man-db man-pages"
 
 echo "Generate fstab:"
 genfstab -U /mnt >> /mnt/etc/fstab
