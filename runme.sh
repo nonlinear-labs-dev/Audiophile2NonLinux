@@ -1,10 +1,14 @@
 #!/bin/sh
 
+echo "Starting transormation of AP Linux into Nonlinux..."
+
 if [ $(fdisk -l /dev/sda | wc -l) != "4" ]
  echo "/dev/sda is already partitioned - exit" && exit 1
-
+ 
+echo "Partitioning /dev/sda"
 curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/sda.sfdisk" | sfdisk /dev/sda
 
+echo "Done."
 
 # mkfs.ext4 /dev/sdXX
 # mount /dev/sdXX /mnt
