@@ -51,9 +51,19 @@ arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
 
 echo "Remove unnecessary packages:"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Suy"
-arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs xorg gnome freetype2 ffmpeg ffmpeg2.8 man-db man-pages"
+arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs xorg gnome mesa freetype2 ffmpeg ffmpeg2.8 man-db man-pages"
+arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs b43-fwcutter bluez-libs geoip ipw2100-fw ipw2200-fw libjpeg-turbo"
+arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs tango-icon-theme xorg-xmessage xf86-input-evdev xf86-input-synaptics zd1211-firmware"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S cpupower"
 
 echo "Generate fstab:"
 genfstab -U /mnt >> /mnt/etc/fstab
 
+echo "Remove some artifacts:"
+truncate -s 0 /mnt/home/sscl/.zprofile
+
+echo "Configure cpupower:"
+sed -i "s/#governor=.*$/governor='performance'/" /mnt/etc/default/cpupower
+arch-chroot /mnt /bin/bash -c "systemctl enable cpupower"
+
+echo "Done."
