@@ -26,7 +26,7 @@ mount /dev/sda1 /mnt/boot
 echo "Tweak AP Linux:"
 sed -i 's/read.*username/username=sscl/' /etc/apl-files/runme.sh
 sed -i 's/read.*password/password=sscl/' /etc/apl-files/runme.sh
-sed -i 's/pacman -U/pacman --noconfirm -U' /etc/apl-files/runme.sh
+sed -i 's/pacman -U/pacman --noconfirm -U/' /etc/apl-files/runme.sh
 
 echo "Copy initial system:"
 cp -ax / /mnt
