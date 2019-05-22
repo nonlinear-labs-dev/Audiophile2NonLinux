@@ -1,116 +1,149 @@
 #!/usr/bin/ash
 ##!/bin/bash
 
-updateTargetDir=/mnt/home/updateWorkDir
-updateTargetFile=${updateTargetDir}/update.tar
-updateSourceFile=/mnt/usb/update.tar
-updateBlob=${updateTargetDir}/update/NonLinux.tar.gz
 IP=192.168.10.10
 
-try_apply_blob() {
-    echo "Trying update blob..."
-    
-    if [ -f ${updateBlob} ]
-    then
-	echo "Nonlinux image found"
-	checksum=`sha256sum ${updateBlob} | cut -d " " -f 1`
-	echo "Checksum is ${checksum}"
-	checksumFile=${updateTargetDir}/update/${checksum}.sign
-	echo "Checksum file is ${checksumFile}"
-	
-	if [ -f ${checksumFile} ]
-	then
-	    echo "Found checksum, applying image"
-	    
-	    return 1
-	else
-	    echo "Did not find checksum, rejecting image"
-	fi
-    else
-	echo "No Update blob exists."
-    fi
-    return 0;
+clean_up() {
+    echo "Cleaning up..."
+    rm -rf /mnt/NonLinux
+    rm -rf /mnt/update 
+    rm -rf /mnt/usb
+    echo "Cleaning up finished."   
 }
 
-try_apply_backdoor() {
-    echo "Try backdoor..."
-    echo "No backdoor exists."
-    return 0
-}
+set_up() {
+    mkdir -p /mnt/NonLinux
+    mount /dev/sda2 /mnt/NonLinux
 
-try_apply_update() {
-    if cd ${updateTargetDir} && tar xf ./update.tar;
-    then
-	echo "Update tar found."
-    else
-	echo "This is not an update.tar"
-	return 0
-    fi	
+    mkdir -p /mnt/update
+    mount /dev/sda3 /mnt/update
 
-    try_apply_blob
-    if [ "$?" -eq "1" ]
-    then
-	echo "Applied blob."
-	return 1
-    fi
-
-    try_apply_backdoor
-    return "$?"
-}
-
-mount_and_try_applying_update() {
-    res=0
     mkdir -p /mnt/usb
-    if mount $1 /mnt/usb; then
-	if [ -f ${updateSourceFile} ]
-	then
-	    echo "Found update file"
-	    cp ${updateSourceFile} ${updateTargetFile}
-	    try_apply_update 
-	    res=$?
-	fi
-	umount -f /mnt/usb
-    fi
-    return ${res}
 }
 
 try_update_from_network() {
     echo "Trying update from network..."
-    wget ${IP}/update.tar --timeout=1 -O ${updateTargetFile}
-    try_apply_update
-    res=$?
-    return ${res}
+    
+    if wget ${IP}/update.tar --timeout=1 -O /mnt/update/update.tar; then 
+        if try_copy_rootfs; then
+            echo "Trying update from network finished successfully."        
+            return 0
+        fi
+    fi
+    
+    echo "Trying update from network finished without success."
+    return 1
 }
 
 try_update_from_usb() {
+    echo "Trying update from usb..."
+
     devices=`blkid -o list | grep "(not mounted)" | grep -o "^[^ ]*"`
     for device in ${devices}; do
-	mount_and_try_applying_update ${device}
+    	if mount_and_try_applying_update ${device}; then
+            return 0
+        fi
     done
+
+    return 1
+}
+
+mount_and_try_applying_update() {
+    echo "Trying mount and update from usb $1..."
+    
+    if mount $1 /mnt/usb; then
+    	if [ -f /mnt/usb/update.tar ]; then
+	        echo "Found update file"
+	        cp /mnt/usb/update.tar /mnt/update/update.tar
+	        if try_apply_update; then 
+                echo "Applied USB update successfully."
+                umount -f /mnt/usb
+                return 0
+	        fi
+	    fi
+	    umount -f /mnt/usb
+    fi
+
+    echo "Trying mount and update from usb finished."
+    return 1
+}
+
+try_apply_update() {
+    echo "Trying apply update..."
+    if [ -f /mnt/update/update.tar ]; then
+        if tar -C /mnt/update -xf /mnt/update/update.tar; then
+            if try_copy_rootfs; then
+                echo "Trying apply update finished successfully."
+                return 0
+            fi
+        fi
+    fi
+
+    # BACKDOOR missing
+    echo "Trying apply update without success."
+    return 1
+}
+
+try_copy_rootfs() {
+    echo "Trying copy rootfs..."
+    
+    if [ -f /mnt/update/update/NonLinux.tar.gz ]; then
+        echo "Source update tar found."
+        checksum=`sha256sum /mnt/update/update/NonLinux.tar.gz | cut -d " " -f 1`
+        checksumFile=/mnt/update/update/${checksum}.sign
+
+        if [ -f ${checksumFile} ]; then
+            echo "Checksum verified."
+
+            mkdir -p /mnt/update/update/NonLinux
+
+            if tar -C /mnt/update/update/NonLinux -xzf /mnt/update/update/NonLinux.tar.gz; then
+                echo "Update tar successfully unpacked."
+                if rsync -a --delete --links /mnt/update/update/NonLinux/Nonlinux /mnt/NonLinux; then
+                    echo "Copied rootfs successfully."
+                    return 0
+                fi
+            fi
+        fi
+    fi
+
+    echo "Trying copy rootfs without success."
+	return 1;
 }
 
 run_hook() {
-    mkdir -p /mnt/home
-    mount /dev/sda3 /mnt/home
+    echo "Running hook..."
 
-    mkdir -p ${updateTargetDir}
+    clean_up
+    set_up
 
-    rm -rf ${updateFile}
-    rm -rf ${updateTargetDir}/*
-
-    try_update_from_network
-
-    if [ "$?" -eq "1" ]; then
-	echo "Network update applied!"
-	return
-    else
-	echo "No Network update applied."
+    if try_update_from_network; then
+        echo "Network update applied successfully!"
+        sleep 10
+        return 0
+	elif try_update_from_usb; then 
+        echo "USB update applied successfully!"
+        sleep 10
+        return 0
     fi
 
-    try_update_from_usb
-    
-    if [ "$?" -eq "1" ]; then
-	echo "USB update applied!"
-	return
-    fi
+    echo "Running hook finished without success."
+    sleep 10
+    return 1
+} 
+
+create_update() {
+    return 1
+
+    # this is just for documentation
+    mkdir /mnt/NonLinux
+    mount /dev/sda2 /mnt/NonLinux
+    mkdir -p /mnt/update/update
+    rsync -a --links --delete /mnt/NonLinux /mnt/update/update
+    cd /mnt/update/update
+    tar -czf ./NonLinux.tar.gz ./NonLinux
+    rm -rf ./NonLinux
+    touch $(sha256sum ./NonLinux.tar.gz | grep -o "^[^ ]*").sign
+    cd ..
+    tar -cf ./update.tar ./update   
 }
