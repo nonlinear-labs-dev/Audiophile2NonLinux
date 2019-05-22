@@ -26,3 +26,7 @@ Start the VM
 Select "Boot Arch Linux (x86_64)" in the boot menu
 type:
 - curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/runme.sh" | sh
+
+
+To flash the image, boot a linux from usb stick and then:
+- ssh user@device "cat ...ePC.raw.tar.gz" | tar xzOf - | dd of=/dev/sda bs=4M status=progress
