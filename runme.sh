@@ -26,6 +26,7 @@ mount /dev/sda1 /mnt/boot
 echo "Tweak AP Linux:"
 wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/install/nlhook" -O /lib/initcpio/install/nlhook
 wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/hook/nlhook" -O /lib/initcpio/hooks/nlhook
+wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/createUpdateFromRunningOS.sh" -O /home/sscl/createUpdateFromRunningOS.sh
 
 sed -i 's/read.*username/username=sscl/' /etc/apl-files/runme.sh
 sed -i 's/read.*password/password=sscl/' /etc/apl-files/runme.sh
