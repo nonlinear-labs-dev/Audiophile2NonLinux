@@ -98,7 +98,7 @@ try_copy_rootfs() {
 
             if tar -C /mnt/update/update/NonLinux -xzf /mnt/update/update/NonLinux.tar.gz; then
                 echo "Update tar successfully unpacked."
-                if rsync -a --delete --links /mnt/update/update/NonLinux/Nonlinux/ /mnt/NonLinux; then
+                if rsync -a --delete --links /mnt/update/update/NonLinux/NonLinux/ /mnt/NonLinux; then
                     echo "Copied rootfs successfully."
                     return 0
                 fi
