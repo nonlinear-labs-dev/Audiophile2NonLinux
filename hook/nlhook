@@ -98,7 +98,7 @@ try_copy_rootfs() {
 
             if tar -C /mnt/update/update/NonLinux -xzf /mnt/update/update/NonLinux.tar.gz; then
                 echo "Update tar successfully unpacked."
-                if rsync -a --delete --links /mnt/update/update/NonLinux/NonLinux/ /mnt/NonLinux; then
+                if rsync -v -a --delete --links /mnt/update/update/NonLinux/NonLinux/ /mnt/NonLinux; then
                     echo "Copied rootfs successfully."
                     return 0
                 fi
@@ -118,15 +118,12 @@ run_hook() {
 
     if try_update_from_network; then
         echo "Network update applied successfully!"
-        sleep 10
         return 0
 	elif try_update_from_usb; then 
         echo "USB update applied successfully!"
-        sleep 10
         return 0
     fi
 
     echo "Running hook finished without success."
-    sleep 10
     return 1
 } 
