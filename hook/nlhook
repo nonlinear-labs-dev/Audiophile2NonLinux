@@ -1,6 +1,6 @@
 #!/usr/bin/ash
 
-IP=192.168.10.10
+IP=192.168.10.11
 
 clean_up() {
     echo "Cleaning up..."
