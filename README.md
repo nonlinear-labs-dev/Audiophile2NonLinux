@@ -1,32 +1,25 @@
 # Audiophile2NonLinux
 How to turn Audiophile Linux into NonLinux
 
-Download AP Linux ISO image: https://sourceforge.net/projects/ap-linux/
-start VirtualBox
-create a new virtual machine
+- Download AP Linux ISO image: https://sourceforge.net/projects/ap-linux/
+- Download the virtual machine definition at https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/ePC.ova
+- create a new virtual machine by importing ePC.ova
+- Start the VM
+- Select "Boot Arch Linux (x86_64)" in the boot menu
+- type: curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/runme.sh" | sh
+- Wait for the script to finish its work.
 
-"Create Virtual Machine"
-- Type: Linux
-- Version: Other Linux (64-bit)
-- HardDisk: Create a virtual hard disk now
--> Press "Create"
+How to create a flash image:
+- open terminal
+- navigate into ePC folder (mine is at ~/VirtualBox VMs/ePC/)
+- type: vboxmanage clonehd --format RAW ./ePC-disk001.vmdk ./ePC.raw
+- you may want to create an archive: tar -czf ./ePC.tar.gz ./ePC.raw
+- and remove the raw file: rm ./ePC.raw
 
-"Create Virtual Hard Disk"
-- File size: 64 GB
-- Hard disk file type: VDI
-- Storage on physical hard disk: Dynamically allocated
--> Press "Create"
+How to flash the image:
+- boot the NUC from any Linux-USB-Stick
+- cat ePC.tar.gz | tar xzOf - | dd of=/dev/sda bs=1M status=progress
 
-Right click on new machine, chose "Settings"
-Click "Storage"
-Select Storage Devices / Controller: IDE / Empty
-Click on the CD symbol and attach the downloaded file "AP-Linux-V.4.0.0.iso"
-
-Start the VM
-Select "Boot Arch Linux (x86_64)" in the boot menu
-type:
-- curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/runme.sh" | sh
-
-
-To flash the image, boot a linux from usb stick and then:
-- ssh user@device "cat ...ePC.raw.tar.gz" | tar xzOf - | dd of=/dev/sda bs=4M status=progress
+How to create an update from the currenlty running OS:
+- call /createUpdateFromRunningOS.sh
+- copy the file /mnt/update/update.tar
