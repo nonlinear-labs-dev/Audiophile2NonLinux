@@ -1,5 +1,4 @@
 #!/usr/bin/ash
-##!/bin/bash
 
 IP=192.168.10.10
 
@@ -99,7 +98,7 @@ try_copy_rootfs() {
 
             if tar -C /mnt/update/update/NonLinux -xzf /mnt/update/update/NonLinux.tar.gz; then
                 echo "Update tar successfully unpacked."
-                if rsync -a --delete --links /mnt/update/update/NonLinux/Nonlinux /mnt/NonLinux; then
+                if rsync -a --delete --links /mnt/update/update/NonLinux/NonLinux/ /mnt/NonLinux; then
                     echo "Copied rootfs successfully."
                     return 0
                 fi
@@ -131,19 +130,3 @@ run_hook() {
     sleep 10
     return 1
 } 
-
-create_update() {
-    return 1
-
-    # this is just for documentation
-    mkdir /mnt/NonLinux
-    mount /dev/sda2 /mnt/NonLinux
-    mkdir -p /mnt/update/update
-    rsync -a --links --delete /mnt/NonLinux /mnt/update/update
-    cd /mnt/update/update
-    tar -czf ./NonLinux.tar.gz ./NonLinux
-    rm -rf ./NonLinux
-    touch $(sha256sum ./NonLinux.tar.gz | grep -o "^[^ ]*").sign
-    cd ..
-    tar -cf ./update.tar ./update   
-}

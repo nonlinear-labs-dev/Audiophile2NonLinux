@@ -26,6 +26,7 @@ mount /dev/sda1 /mnt/boot
 echo "Tweak AP Linux:"
 wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/install/nlhook" -O /lib/initcpio/install/nlhook
 wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/hook/nlhook" -O /lib/initcpio/hooks/nlhook
+wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/createUpdateFromRunningOS.sh" -O /createUpdateFromRunningOS.sh
 
 sed -i 's/read.*username/username=sscl/' /etc/apl-files/runme.sh
 sed -i 's/read.*password/password=sscl/' /etc/apl-files/runme.sh
@@ -33,6 +34,7 @@ sed -i 's/pacman -U/pacman --noconfirm -U/' /etc/apl-files/runme.sh
 sed -i 's/Required DatabaseOptional/Never/' /etc/pacman.conf
 sed -i 's/Server.*mettke/#/' /etc/pacman.d/mirrorlist
 sed -i 's/^HOOKS=.*$/HOOKS="base udev block filesystems autodetect modconf keyboard net nlhook"/' /etc/mkinitcpio.conf
+sed -i 's/^BINARIES=.*$/BINARIES="tar rsync gzip"/' /etc/mkinitcpio.conf
 sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/' /etc/default/grub
 sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT.*$/GRUB_CMDLINE_LINUX_DEFAULT="quiet ip=192.168.10.10:::::eth0:none"/' /etc/default/grub
 
