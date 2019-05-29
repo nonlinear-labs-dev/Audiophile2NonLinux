@@ -61,6 +61,7 @@ arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Su"
 arch-chroot /mnt /bin/bash -c "git clone https://github.com/bluerider/liveroot"
 arch-chroot /mnt /bin/bash -c "cp ./liveroot/initcpio/hooks/oroot /lib/initcpio/hooks/oroot"
 arch-chroot /mnt /bin/bash -c "cp ./liveroot/initcpio/install/oroot /lib/initcpio/install/oroot"
+arch-chroot /mnt /bin/bash -c "mkinitcpio -p linux-rt"
 
 echo "Generate fstab:"
 genfstab -U /mnt >> /mnt/etc/fstab
