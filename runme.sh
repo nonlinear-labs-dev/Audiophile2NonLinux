@@ -33,7 +33,7 @@ sed -i 's/read.*password/password=sscl/' /etc/apl-files/runme.sh
 sed -i 's/pacman -U/pacman --noconfirm -U/' /etc/apl-files/runme.sh
 sed -i 's/Required DatabaseOptional/Never/' /etc/pacman.conf
 sed -i 's/Server.*mettke/#/' /etc/pacman.d/mirrorlist
-sed -i 's/^HOOKS=.*$/HOOKS="base udev block filesystems autodetect modconf keyboard net nlhook"/' /etc/mkinitcpio.conf
+sed -i 's/^HOOKS=.*$/HOOKS="base udev oroot block filesystems autodetect modconf keyboard net nlhook"/' /etc/mkinitcpio.conf
 sed -i 's/^BINARIES=.*$/BINARIES="tar rsync gzip"/' /etc/mkinitcpio.conf
 sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/' /etc/default/grub
 sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT.*$/GRUB_CMDLINE_LINUX_DEFAULT="quiet ip=192.168.10.10:::::eth0:none"/' /etc/default/grub
@@ -56,13 +56,11 @@ arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Suy"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs xorg gnome mesa freetype2 ffmpeg ffmpeg2.8 man-db man-pages"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs b43-fwcutter bluez-libs geoip ipw2100-fw ipw2200-fw libjpeg-turbo"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs tango-icon-theme xorg-xmessage xf86-input-evdev xf86-input-synaptics zd1211-firmware"
-arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S cpupower"
+arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S cpupower git"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Su"
-arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S git cmake make gcc glibmm pkgconf"
-arch-chroot /mnt /bin/bash -c "git clone https://github.com/nonlinear-labs-dev/C15.git"
-arch-chroot /mnt /bin/bash -c "mkdir build"
-arch-chroot /mnt /bin/bash -c "cd build && cmake -D CMAKE_BUILD_TYPE=Release ../C15/audio-engine"
-arch-chroot /mnt /bin/bash -c "cd build && make install"
+arch-chroot /mnt /bin/bash -c "git clone https://github.com/bluerider/liveroot"
+arch-chroot /mnt /bin/bash -c "cp ./liveroot/initcpio/hooks/oroot /lib/initcpio/hooks/oroot"
+arch-chroot /mnt /bin/bash -c "cp ./liveroot/initcpio/install/oroot /lib/initcpio/install/oroot"
 
 echo "Generate fstab:"
 genfstab -U /mnt >> /mnt/etc/fstab
