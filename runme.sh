@@ -36,7 +36,7 @@ sed -i 's/Server.*mettke/#/' /etc/pacman.d/mirrorlist
 sed -i 's/^HOOKS=.*$/HOOKS="base udev oroot block filesystems autodetect modconf keyboard net nlhook"/' /etc/mkinitcpio.conf
 sed -i 's/^BINARIES=.*$/BINARIES="tar rsync gzip"/' /etc/mkinitcpio.conf
 sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/' /etc/default/grub
-sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT.*$/GRUB_CMDLINE_LINUX_DEFAULT="quiet ip=192.168.10.10:::::eth0:none"/' /etc/default/grub
+sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT.*$/GRUB_CMDLINE_LINUX_DEFAULT="quiet ip=192.168.10.10:::::eth0:none oroot=raw"/' /etc/default/grub
 
 echo "Copy initial system:"
 cp -ax / /mnt
