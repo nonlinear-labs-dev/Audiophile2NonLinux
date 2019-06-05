@@ -41,8 +41,8 @@ try_update_from_network() {
 
 try_update_from_usb() {
     echo "Trying update from usb..."
+    devices=`lsblk -o RM,PATH | grep "^ 1" | grep -o "/dev/sd.[0-9]"`
 
-    devices=`blkid -o list | grep "(not mounted)" | grep -o "^[^ ]*"`
     for device in ${devices}; do
     	if mount_and_try_applying_update ${device}; then
             return 0
