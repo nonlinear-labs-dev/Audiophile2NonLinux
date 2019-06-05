@@ -11,11 +11,14 @@ clean_up() {
 }
 
 set_up() {
+    NL_PARTITION=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.2"`
+    UPDATE_PARTITION=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.3"`
+    
     mkdir -p /mnt/NonLinux
-    mount /dev/sda2 /mnt/NonLinux
+    mount ${NL_PARTITION} /mnt/NonLinux
 
     mkdir -p /mnt/update
-    mount /dev/sda3 /mnt/update
+    mount ${UPDATE_PARTITION} /mnt/update
 
     mkdir -p /mnt/usb
     
