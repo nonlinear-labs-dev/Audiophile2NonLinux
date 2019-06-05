@@ -34,8 +34,6 @@ sed -i 's/read.*password/password=sscl/' /etc/apl-files/runme.sh
 sed -i 's/pacman -U/pacman --noconfirm -U/' /etc/apl-files/runme.sh
 sed -i 's/Required DatabaseOptional/Never/' /etc/pacman.conf
 sed -i 's/Server.*mettke/#/' /etc/pacman.d/mirrorlist
-sed -i 's/^HOOKS=.*$/HOOKS="base udev oroot block filesystems autodetect modconf keyboard net nlhook"/' /etc/mkinitcpio.conf
-sed -i 's/^BINARIES=.*$/BINARIES="tar rsync gzip lsblk udevadm"/' /etc/mkinitcpio.conf
 sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/' /etc/default/grub
 sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT.*$/GRUB_CMDLINE_LINUX_DEFAULT="quiet ip=192.168.10.10:::::eth0:none oroot=raw"/' /etc/default/grub
 
@@ -62,6 +60,8 @@ arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Su"
 arch-chroot /mnt /bin/bash -c "git clone https://github.com/bluerider/liveroot"
 arch-chroot /mnt /bin/bash -c "cp ./liveroot/initcpio/hooks/oroot /lib/initcpio/hooks/oroot"
 arch-chroot /mnt /bin/bash -c "cp ./liveroot/initcpio/install/oroot /lib/initcpio/install/oroot"
+arch-chroot /mnt /bin/bash -c "sed -i 's/^HOOKS=.*$/HOOKS=\"base udev oroot block filesystems autodetect modconf keyboard net nlhook\"/' /etc/mkinitcpio.conf"
+arch-chroot /mnt /bin/bash -c "sed -i 's/^BINARIES=.*$/BINARIES=\"tar rsync gzip lsblk udevadm\"/' /etc/mkinitcpio.conf"
 arch-chroot /mnt /bin/bash -c "mkinitcpio -p linux-rt"
 
 echo "Generate fstab:"
