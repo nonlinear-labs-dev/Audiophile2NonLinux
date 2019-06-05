@@ -18,6 +18,8 @@ set_up() {
     mount /dev/sda3 /mnt/update
 
     mkdir -p /mnt/usb
+    
+    echo "0" > /sys/module/usb_storage/parameters/delay_use
 }
 
 try_update_from_network() {
