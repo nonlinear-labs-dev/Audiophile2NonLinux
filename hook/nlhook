@@ -22,7 +22,16 @@ set_up() {
 
     mkdir -p /mnt/usb
     
-    echo "0" > /sys/module/usb_storage/parameters/delay_use
+    USB_DELAY_FILE=/sys/module/usb_storage/parameters/delay_use
+    
+    if [ ! -f ${USB_DELAY_FILE} ]; then
+    	modprobe usb_storage delay_use=0
+    else
+    	echo "0" > ${USB_DELAY_FILE}
+    fi
+    
+    sleep 1
+    udevadm settle
 }
 
 try_update_from_network() {
