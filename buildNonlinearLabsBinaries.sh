@@ -12,7 +12,7 @@ check_preconditions() {
 
 callChecked() {
     echo "$1..."
-    if sh -c $2; then
+    if sh -c "$2"; then
         echo "$1 done."
         return 0
     fi
