@@ -26,7 +26,7 @@ set_up() {
 }
 
 check_out() {
-    callChecked "Checking out project" "git clone https://github.com/nonlinear-labs-dev/C15.git"
+    callChecked "Checking out project" "git clone https://github.com/nonlinear-labs-dev/C15.git && git checkout $1"
     return $?
 }
 
@@ -36,7 +36,7 @@ build() {
 }
 
 main() {
-    if check_preconditions $1 && set_up && check_out && build; then 
+    if check_preconditions $1 && set_up && check_out $1 && build; then 
         return 0
     fi
     return 1
