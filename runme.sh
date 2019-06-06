@@ -57,7 +57,7 @@ arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs b43-fwcutter bluez-libs g
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs tango-icon-theme xorg-xmessage xf86-input-evdev xf86-input-synaptics zd1211-firmware"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S cpupower git"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Su"
-arch-chroot /mnt /bin/bash -c "git clone https://github.com/bluerider/liveroot"
+arch-chroot /mnt /bin/bash -c "git clone https://github.com/nonlinear-labs-dev/liveroot"
 arch-chroot /mnt /bin/bash -c "cp ./liveroot/initcpio/hooks/oroot /lib/initcpio/hooks/oroot"
 arch-chroot /mnt /bin/bash -c "cp ./liveroot/initcpio/install/oroot /lib/initcpio/install/oroot"
 arch-chroot /mnt /bin/bash -c "sed -i 's/^HOOKS=.*$/HOOKS=\"base udev oroot block filesystems autodetect modconf keyboard net nlhook\"/' /etc/mkinitcpio.conf"
