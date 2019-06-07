@@ -19,6 +19,7 @@ set_up() {
 
     mkdir -p /mnt/update
     mount ${UPDATE_PARTITION} /mnt/update
+    rm -rf /mnt/update/*
 
     mkdir -p /mnt/usb
     
@@ -37,8 +38,8 @@ set_up() {
 try_update_from_network() {
     echo "Trying update from network..."
     
-    if wget ${IP}/update.tar --timeout=1 -O /mnt/update/update.tar; then 
-        if try_copy_rootfs; then
+    if wget ${IP}/update.tar --timeout=3 -O /mnt/update/update.tar; then 
+        if try_apply_update; then
             echo "Trying update from network finished successfully."        
             return 0
         fi
