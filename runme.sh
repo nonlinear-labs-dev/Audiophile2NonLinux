@@ -50,6 +50,12 @@ arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 echo "Configure autologin:"
 arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
 
+echo "Downloading NonLinux/Arch packages:"
+
+arch-chroot /mnt /bin/bash -c "wget 'https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/releases/download/1.0/NonLinux.pkg.tar.gz' -O /NonLinux.pkg.tar.gz"
+arch-chroot /mnt /bin/bash -c "tar -xzf /NonLinux.pkg.tar.gz"
+arch-chroot /mnt /bin/bash -c "echo 'Server = file:///pkg/' > /etc/pacman.d/mirrorlist"
+
 echo "Remove unnecessary packages:"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Sy"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Scc"
