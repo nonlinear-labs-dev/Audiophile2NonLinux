@@ -16,8 +16,9 @@ check_preconditions() {
 }
 
 create_vm() {
-    cat ./ePC.ova | sed -E "s/(.*)<Image(.*)location=\"(.*)\"/\1<Image\2location=\"${AP}\"/" > ePC-tweaked.ova
-    VM_NAME=`vboxmanage import ./ePC-tweaked.ova | grep "Suggested VM name" | grep -o "\".*\"" | sed 's/"//g'`
+    VM_NAME=`vboxmanage import ./ePC.ova | grep "Suggested VM name" | grep -o "\".*\"" | sed 's/"//g'`
+    VM_CONFIG=`vboxmanage showvminfo ${VM_NAME} | grep "Config file" | grep -o "/.*$"`
+    sed -E "s@(.*)<Image(.*)location=\"(.*)\"@\1<Image\2location=\"${AP}\"@" -i "${VM_CONFIG}"
     return $?
 }
 
