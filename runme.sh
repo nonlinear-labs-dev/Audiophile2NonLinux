@@ -22,9 +22,6 @@ echo "Mounting root and boot partitions:"
 mount /dev/sda2 /mnt
 mkdir -p /mnt/boot
 mount /dev/sda1 /mnt/boot
-mkdir -p /mnt/update
-mount /dev/sda3 /mnt/update
-rm -rf /mnt/update/pkg
 
 echo "Tweak AP Linux:"
 wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/install/nlhook" -O /lib/initcpio/install/nlhook
@@ -55,6 +52,7 @@ arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
 
 echo "Downloading NonLinux/Arch packages:"
 
+arch-chroot /mnt /bin/bash -c "mkdir -p /mnt/update && mount /dev/sda3 /mnt/update && rm -rf /mnt/update/pkg"
 arch-chroot /mnt /bin/bash -c "wget 'https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/releases/download/1.0/NonLinux.pkg.tar.gz' -O /mnt/update/NonLinux.pkg.tar.gz"
 arch-chroot /mnt /bin/bash -c "tar -C /mnt/update -xzf /mnt/update/NonLinux.pkg.tar.gz"
 arch-chroot /mnt /bin/bash -c "echo 'Server = file:///mnt/update/pkg/' > /etc/pacman.d/mirrorlist"
