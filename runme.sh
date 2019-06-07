@@ -2,26 +2,28 @@
 
 echo "Starting transormation of AP Linux into Nonlinux:"
 
-fdisk -l /dev/sda | grep "/dev/sda[0-9]"
+SSD=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd." | uniq`
+
+fdisk -l ${SSD} | grep "${SSD}[0-9]"
 
 if [ $? -eq 0 ]
 then
- echo "/dev/sda is already partitioned - exit" && exit 1
+ echo "${SSD} is already partitioned - exit" && exit 1
 fi
  
-echo "Partitioning /dev/sda:"
-curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/sda.sfdisk" | sfdisk /dev/sda
+echo "Partitioning ${SSD}:"
+curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/sda.sfdisk" | sfdisk ${SSD}
 
 echo "Creating filesystems:"
-mkfs.ext4 /dev/sda1
-mkfs.ext4 /dev/sda2
-mkfs.ext4 /dev/sda3
-mkfs.ext4 /dev/sda4
+mkfs.ext4 ${SSD}1
+mkfs.ext4 ${SSD}2
+mkfs.ext4 ${SSD}3
+mkfs.ext4 ${SSD}4
 
 echo "Mounting root and boot partitions:"
-mount /dev/sda2 /mnt
+mount ${SSD}2 /mnt
 mkdir -p /mnt/boot
-mount /dev/sda1 /mnt/boot
+mount ${SSD}1 /mnt/boot
 
 echo "Tweak AP Linux:"
 wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/install/nlhook" -O /lib/initcpio/install/nlhook
@@ -44,7 +46,7 @@ echo "Do APLinux stuff:"
 arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./runme.sh"
 
 echo "Install grub:"
-arch-chroot /mnt /bin/bash -c "grub-install --target=i386-pc /dev/sda"
+arch-chroot /mnt /bin/bash -c "grub-install --target=i386-pc ${SSD}"
 arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 
 echo "Configure autologin:"
@@ -53,7 +55,7 @@ arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
 echo "Downloading NonLinux/Arch packages:"
 
 arch-chroot /mnt /bin/bash -c "mkdir -p /mnt/update"
-arch-chroot /mnt /bin/bash -c "mount /dev/sda3 /mnt/update"
+arch-chroot /mnt /bin/bash -c "mount ${SSD}3 /mnt/update"
 arch-chroot /mnt /bin/bash -c "rm -rf /mnt/update/pkg"
 arch-chroot /mnt /bin/bash -c "wget 'https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/releases/download/1.0/NonLinux.pkg.tar.gz' -O /mnt/update/NonLinux.pkg.tar.gz"
 arch-chroot /mnt /bin/bash -c "tar -C /mnt/update -xzf /mnt/update/NonLinux.pkg.tar.gz"
