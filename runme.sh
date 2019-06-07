@@ -2,7 +2,8 @@
 
 echo "Starting transormation of AP Linux into Nonlinux:"
 
-SSD=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd." | uniq`
+SSD_NAME=`lsblk -o RM,NAME | grep "^ 0" | grep -o "sd." | uniq`
+SSD=/dev/${SSD_NAME}
 
 fdisk -l ${SSD} | grep "${SSD}[0-9]"
 
