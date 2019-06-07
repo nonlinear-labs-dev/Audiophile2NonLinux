@@ -53,9 +53,13 @@ arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
 echo "Downloading NonLinux/Arch packages:"
 
 arch-chroot /mnt /bin/bash -c "mkdir -p /mnt/update && mount /dev/sda3 /mnt/update && rm -rf /mnt/update/pkg"
+bash
 arch-chroot /mnt /bin/bash -c "wget 'https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/releases/download/1.0/NonLinux.pkg.tar.gz' -O /mnt/update/NonLinux.pkg.tar.gz"
+bash
 arch-chroot /mnt /bin/bash -c "tar -C /mnt/update -xzf /mnt/update/NonLinux.pkg.tar.gz"
+bash
 arch-chroot /mnt /bin/bash -c "echo 'Server = file:///mnt/update/pkg/' > /etc/pacman.d/mirrorlist"
+bash
 
 echo "Remove unnecessary packages:"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Sy"
