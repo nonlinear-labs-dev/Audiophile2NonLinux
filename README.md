@@ -1,5 +1,7 @@
 # Audiophile2NonLinux
 How to turn Audiophile Linux into NonLinux
+* In a VM:
+** foo
 
 - Download AP Linux ISO image: https://sourceforge.net/projects/ap-linux/
 - Download the virtual machine definition at https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/ePC.ova
