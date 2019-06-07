@@ -18,6 +18,7 @@ set_up() {
 
     mkdir -p /mnt/update
     mount /dev/sda3 /mnt/update
+    rm -rf /mnt/update/*
         
     mkdir -p /mnt/update/update
     echo "Setting up done."
