@@ -88,10 +88,10 @@ echo "Configure cpupower:"
 sed -i "s/#governor=.*$/governor='performance'/" /mnt/etc/default/cpupower
 arch-chroot /mnt /bin/bash -c "systemctl enable cpupower"
 
-arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/firmware"
-arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/modules"
-arch-chroot /mnt /bin/bash -c "cd /usr/share/locale && ls -1 | grep -v 'en_US' | xargs rm -rf {}"
-arch-chroot /mnt /bin/bash -c "rm -rf /usr/share/man"
-arch-chroot /mnt /bin/bash -c "rm -rf /var/cache/pacman/pkg/*"
+# arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/firmware"
+# arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/modules"
+# arch-chroot /mnt /bin/bash -c "cd /usr/share/locale && ls -1 | grep -v 'en_US' | xargs rm -rf {}"
+# arch-chroot /mnt /bin/bash -c "rm -rf /usr/share/man"
+# arch-chroot /mnt /bin/bash -c "rm -rf /var/cache/pacman/pkg/*"
 
 echo "Done."
