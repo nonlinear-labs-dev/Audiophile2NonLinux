@@ -76,8 +76,6 @@ arch-chroot /mnt /bin/bash -c "cp ./liveroot/initcpio/hooks/oroot /lib/initcpio/
 arch-chroot /mnt /bin/bash -c "cp ./liveroot/initcpio/install/oroot /lib/initcpio/install/oroot"
 arch-chroot /mnt /bin/bash -c "sed -i 's/^HOOKS=.*$/HOOKS=\"base udev oroot block filesystems autodetect modconf keyboard net nlhook\"/' /etc/mkinitcpio.conf"
 arch-chroot /mnt /bin/bash -c "sed -i 's/^BINARIES=.*$/BINARIES=\"tar rsync gzip lsblk udevadm\"/' /etc/mkinitcpio.conf"
-arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/firmware"
-# arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/modules"
 arch-chroot /mnt /bin/bash -c "cd /usr/share/locale && ls -1 | grep -v 'en_US' | xargs rm -rf {}"
 arch-chroot /mnt /bin/bash -c "rm -rf /usr/share/man"
 arch-chroot /mnt /bin/bash -c "rm -rf /var/cache/pacman/pkg/*"
@@ -93,5 +91,8 @@ truncate -s 0 /mnt/home/sscl/.zprofile
 echo "Configure cpupower:"
 sed -i "s/#governor=.*$/governor='performance'/" /mnt/etc/default/cpupower
 arch-chroot /mnt /bin/bash -c "systemctl enable cpupower"
+
+arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/firmware"
+arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/modules"
 
 echo "Done."
