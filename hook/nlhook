@@ -3,14 +3,15 @@
 IP=192.168.10.11
 
 clean_up() {
-    echo "Cleaning up..."
+    echo "Clean up..."
     rm -rf /mnt/NonLinux
     rm -rf /mnt/update 
     rm -rf /mnt/usb
-    echo "Cleaning up finished."   
+    echo "Clean up done."   
 }
 
 set_up() {
+    echo "Set up..."
     NL_PARTITION=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.2"`
     UPDATE_PARTITION=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.3"`
     
@@ -31,34 +32,36 @@ set_up() {
     	echo "0" > ${USB_DELAY_FILE}
     fi
     
-    sleep 1
     udevadm settle
+    echo "Set up done."
 }
 
 try_update_from_network() {
-    echo "Trying update from network..."
+    echo "Try update from network..."
     
     if wget ${IP}/update.tar --timeout=3 -O /mnt/update/update.tar; then 
         if try_apply_update; then
-            echo "Trying update from network finished successfully."        
+            echo "Try update from network done."
             return 0
         fi
     fi
     
-    echo "Trying update from network finished without success."
+    echo "Try update from network failed."
     return 1
 }
 
 try_update_from_usb() {
-    echo "Trying update from usb..."
+    echo "Try update from usb..."
     devices=`lsblk -o RM,PATH | grep "^ 1" | grep -o "/dev/sd.[0-9]"`
 
     for device in ${devices}; do
     	if mount_and_try_applying_update ${device}; then
+            echo "Try update from usb done."
             return 0
         fi
     done
 
+    echo "Try update from usb failed."
     return 1
 }
 
@@ -83,23 +86,26 @@ mount_and_try_applying_update() {
 }
 
 try_apply_update() {
-    echo "Trying apply update..."
+    echo "Try apply update..."
     if [ -f /mnt/update/update.tar ]; then
         if tar -C /mnt/update -xf /mnt/update/update.tar; then
+            if try_open_backdoor; then
+                echo "Try apply update via backdoor done."
+                return 0
+            fi
             if try_copy_rootfs; then
-                echo "Trying apply update finished successfully."
+                echo "Try apply update via tar-file done."
                 return 0
             fi
         fi
     fi
 
-    # BACKDOOR missing
-    echo "Trying apply update without success."
+    echo "Trying apply update failed."
     return 1
 }
 
 try_copy_rootfs() {
-    echo "Trying copy rootfs..."
+    echo "Try copy rootfs..."
     
     if [ -f /mnt/update/update/NonLinux.tar.gz ]; then
         echo "Source update tar found."
@@ -114,16 +120,39 @@ try_copy_rootfs() {
             if tar -C /mnt/update/update/NonLinux -xzf /mnt/update/update/NonLinux.tar.gz; then
                 echo "Update tar successfully unpacked."
                 if rsync -v -a --delete --links /mnt/update/update/NonLinux/NonLinux/ /mnt/NonLinux; then
-                    echo "Copied rootfs successfully."
+                    echo "Try copy rootfs done."
                     return 0
                 fi
             fi
         fi
     fi
 
-    echo "Trying copy rootfs without success."
-	return 1;
+    echo "Try copy rootfs failed."
+	return 1
 }
+
+try_open_backdoor() {
+    echo "Try open backdoor..."
+    
+    if [ -f /mnt/update/update/backdoor.sh ]; then
+        echo "Backdoor found."
+        checksum=`sha256sum /mnt/update/update/backdoor.sh | cut -d " " -f 1`
+        checksumFile=/mnt/update/update/${checksum}.sign
+
+        if [ -f ${checksumFile} ]; then
+            echo "Checksum verified."
+            chmod +x /mnt/update/update/backdoor.sh
+            if /bin/bash -c "/mnt/update/update/backdoor.sh"; then
+                echo "Try open backdoor done."
+                return 0
+            fi
+        fi
+    fi
+
+    echo "Try open backdoor failed."
+	return 1
+}
+
 
 run_hook() {
     echo "Running hook..."
