@@ -142,7 +142,7 @@ try_open_backdoor() {
         if [ -f ${checksumFile} ]; then
             echo "Checksum verified."
             chmod +x /mnt/update/update/backdoor.sh
-            if cd /mnt/update/update/ && /bin/bash -c "./backdoor.sh"; then
+            if cd /mnt/update/update/ && /usr/bin/ash ./backdoor.sh; then
                 echo "Try open backdoor done."
                 return 0
             fi
