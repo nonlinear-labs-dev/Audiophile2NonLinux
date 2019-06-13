@@ -31,7 +31,7 @@ check_out() {
 }
 
 build() {
-    callChecked "Building project" "mkdir build && cd build && cmake -D CMAKE_BUILD_TYPE=Release ../C15/audio-engine && make install"
+    callChecked "Building project" "mkdir build && cd build && cmake -D CMAKE_BUILD_TYPE=Release ../C15/audio-engine && make install && systemctl enable /usr/local/etc/systemd/system/audio-engine.service"
     return $?
 }
 
