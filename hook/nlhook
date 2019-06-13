@@ -12,8 +12,8 @@ clean_up() {
 
 set_up() {
     echo "Set up..."
-    NL_PARTITION=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.2"`
-    UPDATE_PARTITION=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.3"`
+    NL_PARTITION=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.3"`
+    UPDATE_PARTITION=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.4"`
     
     mkdir -p /mnt/NonLinux
     mount ${NL_PARTITION} /mnt/NonLinux
