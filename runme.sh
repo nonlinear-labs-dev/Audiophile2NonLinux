@@ -87,11 +87,17 @@ arch-chroot /mnt /bin/bash -c "mkinitcpio -p linux-rt"
 echo "Generate fstab:"
 genfstab -U /mnt >> /mnt/etc/fstab
 
-echo "Remove some artifacts:"
-truncate -s 0 /mnt/home/sscl/.zprofile
-
 echo "Configure cpupower:"
 sed -i "s/#governor=.*$/governor='performance'/" /mnt/etc/default/cpupower
 arch-chroot /mnt /bin/bash -c "systemctl enable cpupower"
+
+echo "Remove some artifacts:"
+truncate -s 0 /mnt/home/sscl/.zprofile
+arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/modules/5.1.7-arch1-1-ARCH"
+arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/modules/extramodules-ARCH"
+arch-chroot /mnt /bin/bash -c "cd /usr/share/locale && ls -1 | grep -v 'en_US' | xargs rm -rf {}"
+arch-chroot /mnt /bin/bash -c "rm -rf /usr/share/doc"
+arch-chroot /mnt /bin/bash -c "rm -rf /usr/share/info"
+arch-chroot /mnt /bin/bash -c "rm -rf /usr/share/man"
 
 echo "Done."
