@@ -1,9 +1,12 @@
-label: dos
-label-id: 0x57897867
-device: /dev/sda
+label: gpt
+label-id: 7D22A5F5-C3A7-4C35-B879-B58C9B422919
+device: /mnt/fedora-home/epc.img
 unit: sectors
+first-lba: 2048
+last-lba: 134217694
 
-/dev/sda1 : start=     2048, size=  8388608, type=83, bootable
-/dev/sda2 : start=  8390656, size= 16777216, type=83
-/dev/sda3 : start= 25167872, size= 16777216, type=83
-/dev/sda4 : start= 41945088, size= 92272640, type=83
+/dev/sda1 : start=        2048, size=     2097152, type=21686148-6449-6E6F-744E-656564454649, uuid=37946461-1176-43E6-9F0F-5B98652B8AB9
+/dev/sda2 : start=     2099200, size=     8388608, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=71EA19E1-38E2-4631-B0EC-0A1D15BA5B41
+/dev/sda3 : start=    10487808, size=    16777216, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=274A1E65-7546-4887-86DD-771BAC588588
+/dev/sda4 : start=    27265024, size=    16777216, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=E30DE52F-B006-442E-9A4A-F332A9A0FF00
+/dev/sda5 : start=    44042240, size=    90175455, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=E993945D-609B-4C84-8700-F71BEC818896
