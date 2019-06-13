@@ -1,5 +1,8 @@
 #!/bin/sh
 
+set -e
+set -x
+
 echo "Starting transormation of AP Linux into Nonlinux:"
 
 SSD_NAME=`lsblk -o RM,NAME | grep "^ 0" | grep -o "sd." | uniq`
