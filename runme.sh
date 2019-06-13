@@ -99,7 +99,7 @@ sed -i "s/#governor=.*$/governor='performance'/" /mnt/etc/default/cpupower
 arch-chroot /mnt /bin/bash -c "systemctl enable cpupower"
 
 echo "Build Nonlinear Labs software:"
-arch-chroot /mnt /bin/bash -c "cd / && /buildNonlinearLabsBinaries.sh"
+arch-chroot /mnt /bin/bash -c "cd / && /buildNonlinearLabsBinaries.sh dsp_optimization"
 
 echo "Remove some artifacts:"
 truncate -s 0 /mnt/home/sscl/.zprofile
