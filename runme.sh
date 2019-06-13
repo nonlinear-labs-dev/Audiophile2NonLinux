@@ -58,8 +58,9 @@ echo "Downloading NonLinux/Arch packages:"
 arch-chroot /mnt /bin/bash -c "mkdir -p /mnt/update"
 arch-chroot /mnt /bin/bash -c "mount ${SSD}3 /mnt/update"
 arch-chroot /mnt /bin/bash -c "rm -rf /mnt/update/pkg"
-arch-chroot /mnt /bin/bash -c "wget 'http://192.168.2.180:8000/NonLinux.pkg.tar.gz' -O /mnt/update/NonLinux.pkg.tar.gz"
-# arch-chroot /mnt /bin/bash -c "wget 'https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/releases/download/1.0/NonLinux.pkg.tar.gz' -O /mnt/update/NonLinux.pkg.tar.gz"
+arch-chroot /mnt /bin/bash -c "wget 'http://192.168.2.180:8000/NonLinux.pkg.tar.gz' -t 5 -O /mnt/update/NonLinux.pkg.tar.gz"
+arch-chroot /mnt /bin/bash -c "if [ ! -f /mnt/update/NonLinux.pkg.tar.gz ]; then wget 'http://185.28.186.202:8000/NonLinux.pkg.tar.gz; fi' -t 5 -O /mnt/update/NonLinux.pkg.tar.gz"
+arch-chroot /mnt /bin/bash -c "if [ ! -f /mnt/update/NonLinux.pkg.tar.gz ]; then wget 'https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/releases/download/1.0/NonLinux.pkg.tar.gz; fi' -t 5 -O /mnt/update/NonLinux.pkg.tar.gz"
 arch-chroot /mnt /bin/bash -c "tar -C /mnt/update -xzf /mnt/update/NonLinux.pkg.tar.gz"
 arch-chroot /mnt /bin/bash -c "echo 'Server = file:///mnt/update/pkg/' > /etc/pacman.d/mirrorlist"
 
@@ -87,11 +88,5 @@ truncate -s 0 /mnt/home/sscl/.zprofile
 echo "Configure cpupower:"
 sed -i "s/#governor=.*$/governor='performance'/" /mnt/etc/default/cpupower
 arch-chroot /mnt /bin/bash -c "systemctl enable cpupower"
-
-# arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/firmware"
-# arch-chroot /mnt /bin/bash -c "rm -rf /usr/lib/modules"
-# arch-chroot /mnt /bin/bash -c "cd /usr/share/locale && ls -1 | grep -v 'en_US' | xargs rm -rf {}"
-# arch-chroot /mnt /bin/bash -c "rm -rf /usr/share/man"
-# arch-chroot /mnt /bin/bash -c "rm -rf /var/cache/pacman/pkg/*"
 
 echo "Done."

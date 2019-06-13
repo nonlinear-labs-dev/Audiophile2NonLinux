@@ -4,21 +4,56 @@ check_preconditions() {
     echo "Checking preconditions..."
     AP="$1/AP-Linux-V.4.0.iso"
 
-    if [ -f ${AP} ]; then
-        echo "Checking preconditions done."
-        return 0
+    if [ ! uuid ]; then 
+        echo "UUID binary not installed"
+        return 1
     fi
 
-    echo "${AP} not found."
-    echo "usage: ./run-me-on-vm-host.sh path-to-folder-containing-AP-Linux-V.4.0.iso"
-    echo "Checking preconditions failed."
-    return 1
+    if [ ! -f ${AP} ]; then
+        echo "${AP} not found."
+        echo "usage: ./run-me-on-vm-host.sh path-to-folder-containing-AP-Linux-V.4.0.iso"
+        echo "Checking preconditions failed."
+        return 1
+    fi 
+        
+    echo "Checking preconditions done."
+    return 0
 }
 
 create_vm() {
-    VM_NAME=`vboxmanage import ./ePC.ova | grep "Suggested VM name" | grep -o "\".*\"" | sed 's/"//g'`
-    VM_CONFIG=`vboxmanage showvminfo ${VM_NAME} | grep "Config file" | grep -o "/.*$"`
-    sed -E "s@(.*)<Image(.*)location=\"(.*)\"@\1<Image\2location=\"${AP}\"@" -i "${VM_CONFIG}"
+    PWD=`pwd`
+    TIMESTAMP=`date +%m-%d-%Y-%H:%M:%S`
+    VM_NAME="ePC-${TIMESTAMP}"
+    MACHINE_FOLDER="${PWD}/machines/${VM_NAME}"
+    mkdir -p ${MACHINE_FOLDER}
+    MACHINE_PATH="${MACHINE_FOLDER}/${VM_NAME}.vbox"
+    MACHINE_ID=`uuid`
+    DVD_ID=`uuid`
+
+    EXISTING_DVD_ID=`vboxmanage list dvds | grep -F "AP-Linux-V.4.0.iso" -B 4 | head -n1 | grep -o " [^ ]*" | grep -o "[^ ]*"`
+    echo "EXISTING_DVD_ID = ${EXISTING_DVD_ID}"
+
+    if [ -n "${EXISTING_DVD_ID}" ]; then 
+        DVD_ID=${EXISTING_DVD_ID}
+        echo "DVD already registered as ${EXISTING_DVD_ID}"
+    fi
+
+    vboxmanage createmedium disk --filename ${MACHINE_FOLDER}/ePC-disk001.vmdk --size 65536 --format VMDK 
+    HARDDISK_ID=`vboxmanage list hdds | grep -F "${MACHINE_FOLDER}/ePC-disk001.vmdk" -B 4 | head -n1 | grep -o " [^ ]*" | grep -o "[^ ]*"`
+
+    echo "HARDDISK_ID = ${HARDDISK_ID}"
+    echo "DVD_ID = ${DVD_ID}"
+
+    cp ./ePC.vbox.in ${MACHINE_PATH}
+    sed -E "s@MACHINE_NAME@${VM_NAME}@g" -i ${MACHINE_PATH}
+    sed -E "s@VM_NAME@${VM_NAME}@g" -i ${MACHINE_PATH}
+    sed -E "s@MACHINE_ID@${MACHINE_ID}@g" -i ${MACHINE_PATH}
+    sed -E "s@HARDDISK_ID@${HARDDISK_ID}@g" -i ${MACHINE_PATH}
+    sed -E "s@DVD_ID@${DVD_ID}@g" -i ${MACHINE_PATH}
+    sed -E "s@DVD_PATH@${AP}@g" -i ${MACHINE_PATH}
+
+    vboxmanage registervm ${MACHINE_PATH}
+
     return $?
 }
 
@@ -33,7 +68,7 @@ choose_boot_option() {
 }
 
 start_script() {
-    sleep 20
+    sleep 30
     vboxmanage controlvm ${VM_NAME} keyboardputstring 'curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/runme.sh" | sh'
     vboxmanage controlvm ${VM_NAME} keyboardputscancode 1c 9c
 }
