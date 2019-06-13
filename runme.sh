@@ -33,6 +33,9 @@ wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/hook/
 wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/createUpdateFromRunningOS.sh" -O /createUpdateFromRunningOS.sh
 wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/buildNonlinearLabsBinaries.sh" -O /buildNonlinearLabsBinaries.sh
 
+arch-chroot /mnt /bin/bash -c "chmod +x /createUpdateFromRunningOS.sh"
+arch-chroot /mnt /bin/bash -c "chmod +x /buildNonlinearLabsBinaries.sh"
+
 sed -i 's/read.*username/username=sscl/' /etc/apl-files/runme.sh
 sed -i 's/read.*password/password=sscl/' /etc/apl-files/runme.sh
 sed -i 's/pacman -U/pacman --noconfirm -U/' /etc/apl-files/runme.sh
@@ -91,6 +94,9 @@ genfstab -U /mnt >> /mnt/etc/fstab
 echo "Configure cpupower:"
 sed -i "s/#governor=.*$/governor='performance'/" /mnt/etc/default/cpupower
 arch-chroot /mnt /bin/bash -c "systemctl enable cpupower"
+
+echo "Build Nonlinear Labs software:"
+arch-chroot /mnt /bin/bash -c "cd / && /buildNonlinearLabsBinaries.sh"
 
 echo "Remove some artifacts:"
 truncate -s 0 /mnt/home/sscl/.zprofile
