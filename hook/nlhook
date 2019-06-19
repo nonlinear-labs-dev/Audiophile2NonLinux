@@ -90,11 +90,17 @@ try_apply_update() {
     if [ -f /mnt/update/update.tar ]; then
         if tar -C /mnt/update -xf /mnt/update/update.tar; then
             if try_open_backdoor; then
-                echo "Try apply update via backdoor done."
+                echo "Executed backdoor."
                 return 0
             fi
+
             if try_copy_rootfs; then
-                echo "Try apply update via tar-file done."
+                echo "Copied archive content on top of rootfs."
+                return 0
+            fi
+
+            if try_replace_rootfs; then
+                echo "Replaced root fs with archive content."
                 return 0
             fi
         fi
@@ -105,7 +111,34 @@ try_apply_update() {
 }
 
 try_copy_rootfs() {
-    echo "Try copy rootfs..."
+    echo "Try copying rootfs..."
+    
+    if [ -f /mnt/update/update/NonLinux-Incremental.tar.gz ]; then
+        echo "Source update tar found."
+        checksum=`sha256sum /mnt/update/update/NonLinux-Incremental.tar.gz | cut -d " " -f 1`
+        checksumFile=/mnt/update/update/${checksum}.sign
+
+        if [ -f ${checksumFile} ]; then
+            echo "Checksum verified."
+
+            mkdir -p /mnt/update/update/NonLinux
+
+            if tar -C /mnt/update/update/NonLinux -xzf /mnt/update/update/NonLinux-Incremental.tar.gz; then
+                echo "Update tar successfully unpacked."
+                if rsync -v -a --links /mnt/update/update/NonLinux/NonLinux/ /mnt/NonLinux; then
+                    echo "Copied tar content."
+                    return 0
+                fi
+            fi
+        fi
+    fi
+
+    echo "Copying rootfs failed."
+	return 1
+}
+
+try_replace_rootfs() {
+    echo "Try replacing rootfs..."
     
     if [ -f /mnt/update/update/NonLinux.tar.gz ]; then
         echo "Source update tar found."
@@ -120,14 +153,14 @@ try_copy_rootfs() {
             if tar -C /mnt/update/update/NonLinux -xzf /mnt/update/update/NonLinux.tar.gz; then
                 echo "Update tar successfully unpacked."
                 if rsync -v -a --delete --links /mnt/update/update/NonLinux/NonLinux/ /mnt/NonLinux; then
-                    echo "Try copy rootfs done."
+                    echo "Replaced rootfs."
                     return 0
                 fi
             fi
         fi
     fi
 
-    echo "Try copy rootfs failed."
+    echo "Replacing rootfs failed."
 	return 1
 }
 
