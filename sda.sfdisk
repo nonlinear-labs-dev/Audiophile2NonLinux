@@ -3,7 +3,6 @@ label-id: 7D22A5F5-C3A7-4C35-B879-B58C9B422919
 device: /mnt/fedora-home/epc.img
 unit: sectors
 first-lba: 2048
-last-lba: 134217694
 
 /dev/sda1 : start=        2048, size=     2097152, type=21686148-6449-6E6F-744E-656564454649, uuid=37946461-1176-43E6-9F0F-5B98652B8AB9
 /dev/sda2 : start=     2099200, size=     8388608, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=71EA19E1-38E2-4631-B0EC-0A1D15BA5B41
