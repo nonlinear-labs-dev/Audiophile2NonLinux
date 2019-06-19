@@ -14,6 +14,7 @@ fi
  
 echo "Partitioning ${SSD}:"
 curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/sda.sfdisk" | sfdisk ${SSD}
+echo ";" | sfdisk -a ${SSD}
 
 echo "Creating filesystems:"
 mkfs.ext4 ${SSD}1
