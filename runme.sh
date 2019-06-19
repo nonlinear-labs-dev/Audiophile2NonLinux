@@ -51,7 +51,7 @@ echo "Do APLinux stuff:"
 arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./runme.sh"
 
 echo "Install grub:"
-arch-chroot /mnt /bin/bash -c "grub-install --target=i386-pc ${SSD}"
+arch-chroot /mnt /bin/bash -c "grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch_grub --recheck"
 arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 
 echo "Configure autologin:"
