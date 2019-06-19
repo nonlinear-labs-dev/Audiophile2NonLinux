@@ -17,16 +17,15 @@ curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/sd
 echo ";" | sfdisk -a ${SSD}
 
 echo "Creating filesystems:"
-mkfs.ext4 ${SSD}1
+mkfs.fat ${SSD}1
 mkfs.ext4 ${SSD}2
 mkfs.ext4 ${SSD}3
 mkfs.ext4 ${SSD}4
-mkfs.ext4 ${SSD}5
 
 echo "Mounting root and boot partitions:"
-mount ${SSD}3 /mnt
+mount ${SSD}2 /mnt
 mkdir -p /mnt/boot
-mount ${SSD}2 /mnt/boot
+mount ${SSD}1 /mnt/boot
 
 echo "Tweak AP Linux:"
 wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/install/nlhook" -O /lib/initcpio/install/nlhook
@@ -61,7 +60,7 @@ arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
 echo "Downloading NonLinux/Arch packages:"
 
 arch-chroot /mnt /bin/bash -c "mkdir -p /mnt/update"
-arch-chroot /mnt /bin/bash -c "mount ${SSD}4 /mnt/update"
+arch-chroot /mnt /bin/bash -c "mount ${SSD}3 /mnt/update"
 arch-chroot /mnt /bin/bash -c "rm -rf /mnt/update/pkg"
 arch-chroot /mnt /bin/bash -c "touch /mnt/update/NonLinux.pkg.tar.gz"
 
