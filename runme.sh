@@ -85,6 +85,7 @@ arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs tango-icon-theme xorg-xme
 # arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs linux-rt-headers lm_sensors lvm2 lua lsscsi mdadm mtools openvpn"
 # arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs sg3_utils syslinux s-nail smartmontools sysfsutils tcpdump"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S cpupower git networkmanager"
+arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs xorgproto xfsprogs cifs-utils emacs-nox lvm2"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Su"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Qdt"
 
@@ -117,5 +118,11 @@ arch-chroot /mnt /bin/bash -c "cd /usr/share/locale && ls -1 | grep -v 'en_US' |
 arch-chroot /mnt /bin/bash -c "rm -rf /usr/share/doc"
 arch-chroot /mnt /bin/bash -c "rm -rf /usr/share/info"
 arch-chroot /mnt /bin/bash -c "rm -rf /usr/share/man"
+
+arch-chroot /mnt /bin/bash -c "systemctl mask systemd-backlight@"
+arch-chroot /mnt /bin/bash -c "systemctl mask systemd-random-seed"
+arch-chroot /mnt /bin/bash -c "systemctl mask systemd-tmpfiles-setup"
+arch-chroot /mnt /bin/bash -c "systemctl mask systemd-tmpfiles-clean"
+arch-chroot /mnt /bin/bash -c "systemctl mask systemd-tmpfiles-setup-dev"
 
 echo "Done."
