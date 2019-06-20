@@ -23,6 +23,7 @@
         <HardwareVirtExLargePages enabled="false"/>
       </CPU>
       <Memory RAMSize="2048"/>
+      <Firmware type="EFI"/>
       <HID Pointing="USBTablet"/>
       <Display VRAMSize="16"/>
       <VideoCapture fps="25" options="ac_enabled=false"/>

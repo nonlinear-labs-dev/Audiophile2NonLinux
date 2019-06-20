@@ -24,6 +24,8 @@ run_hook() {
    chmod ug+x /overlay_flush
    poll_device /dev/sda2 20
    mkdir -p /lroot
+   mkdir -p /troot
+
    "$mount_handler" /lroot
 
    if [ ! -b "/dev/zram0" ]; then
