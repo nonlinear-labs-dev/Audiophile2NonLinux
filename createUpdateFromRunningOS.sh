@@ -1,33 +1,26 @@
 #!/bin/sh
 
-check_preconditions() {
-    echo "Checking preconditions..."
-    NUM_SDA_PARTITIONS=`fdisk -l /dev/sda | grep "sda[0-9]" | wc -l`
-    if [ $NUM_SDA_PARTITIONS -eq "4" ]; then
-        echo "Checking preconditions done."
-        return 0
-    fi
-    echo "Checking preconditions failed."
-    return 1
-}
+SSD_NAME=$(lsblk -o RM,NAME | grep "^ 0" | grep -o "sd." | uniq)
+SSD=/dev/${SSD_NAME}
 
 set_up() {
     echo "Setting up..."
-    mkdir -p /mnt/NonLinux
-    mount /dev/sda2 /mnt/NonLinux
 
-    mkdir -p /mnt/update
-    mount /dev/sda3 /mnt/update
-    rm -rf /mnt/update/*
-        
-    mkdir -p /mnt/update/update
+    mkdir -p /nloverlay
+    mount /dev/sda3 /nloverlay
+
+    rm -rf  /nloverlay/update-scratch
+
+    mkdir -p /nloverlay/update-scratch/update
+    mkdir -p /nloverlay/runtime-overlay
+
     echo "Setting up done."
     return 0
 }
 
 copy_running_os() {
     echo "Copying running os..."
-    if rsync -a --links --delete /mnt/NonLinux /mnt/update/update; then
+    if tar -C /nloverlay/runtime-overlay -czf /nloverlay/update-scratch/update/NonLinuxOverlay.tar.gz .; then
         echo "Copying running os done."
         return 0
     fi
@@ -35,29 +28,9 @@ copy_running_os() {
     return 1
 }
 
-compress_copy() {
-    echo "Compressing copy..."
-    if (cd /mnt/update/update/ && tar -czf ./NonLinux.tar.gz ./NonLinux); then
-        echo "Compressing copy done."
-        return 0
-    fi
-    echo "Compressing copy failed."
-    return 1
-}
-
-cleanup_copy() {
-    echo "Clean up copy..."
-    if rm -rf /mnt/update/update/NonLinux; then 
-        echo "Clean up copy done."
-        return 0
-    fi
-    echo "Clean up copy failed."
-    return 1
-}
-
 calc_checksum() {
     echo "Calc checksum..."
-    if (cd /mnt/update/update/ && touch $(sha256sum ./NonLinux.tar.gz | grep -o "^[^ ]*").sign); then 
+    if (cd /nloverlay/update-scratch/update/ && touch $(sha256sum ./NonLinuxOverlay.tar.gz | grep -o "^[^ ]*").sign); then
         echo "Calc checksum done."
         return 0
     fi
@@ -67,7 +40,7 @@ calc_checksum() {
 
 create_update_tar() {
     echo "Create update.tar..."
-    if (cd /mnt/update/ && tar -cf ./update.tar ./update); then 
+    if (cd /nloverlay/update-scratch/ && tar -cf /update.tar ./update); then
         echo "Create update.tar done."
         return 0
     fi
@@ -77,27 +50,24 @@ create_update_tar() {
 
 cleanup_staging() {
     echo "Clean up staging dir..."
-    if rm -rf /mnt/update/update; then 
+    if rm -rf /nloverlay/update-scratch/update; then
         echo "Clean up staging dir done."
         return 0
     fi
     echo "Clean up staging dir failed."
     return 1
 }
- 
+
 create_update() {
     echo "Creating update..."
 
-    if check_preconditions; then
-        if set_up && copy_running_os && compress_copy && cleanup_copy && calc_checksum && create_update_tar && cleanup_staging; then
-            echo "Created update done."
-            return 0
-        fi
-    fi    
+    if set_up && copy_running_os && calc_checksum && create_update_tar && cleanup_staging; then
+        echo "Created update done."
+        return 0
+    fi
 
     echo "Creating update failed."
     return 1
 }
-
 
 create_update

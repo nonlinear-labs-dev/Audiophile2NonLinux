@@ -4,8 +4,8 @@ IP=192.168.10.11
 
 clean_up() {
     echo "Clean up..."
-    rm -rf /mnt/overlay/scratch
     rm -rf /nloverlay/runtime-overlay/*
+    rm -rf /nloverlay/update-scratch/*
     echo "Clean up done."
 }
 
@@ -14,13 +14,11 @@ set_up() {
     OVERLAY_PARTITION=$(lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.3")
 
     mkdir -p /nloverlay
-    mount /dev/sda3 /nloverlay
+    mount ${OVERLAY_PARTITION} /nloverlay
     mkdir -p /nloverlay/os-overlay
     mkdir -p /nloverlay/update-scratch
     mkdir -p /nloverlay/runtime-overlay
     mkdir -p /nloverlay/work
-
-    mount ${OVERLAY_PARTITION} /nloverlay/update-scratch
     mkdir -p /mnt/usb
 
     USB_DELAY_FILE=/sys/module/usb_storage/parameters/delay_use
