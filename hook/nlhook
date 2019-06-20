@@ -4,24 +4,17 @@ IP=192.168.10.11
 
 clean_up() {
     echo "Clean up..."
-    rm -rf /mnt/NonLinux
-    rm -rf /mnt/update 
-    rm -rf /mnt/usb
+    rm -rf /mnt/overlay/scratch
     echo "Clean up done."   
 }
 
 set_up() {
     echo "Set up..."
-    NL_PARTITION=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.2"`
-    UPDATE_PARTITION=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.3"`
+    OVERLAY_PARTITION=`lsblk -o RM,PATH | grep "^ 0" | grep -o "/dev/sd.3"`
     
-    mkdir -p /mnt/NonLinux
-    mount ${NL_PARTITION} /mnt/NonLinux
-
-    mkdir -p /mnt/update
-    mount ${UPDATE_PARTITION} /mnt/update
-    rm -rf /mnt/update/*
-
+    mkdir -p /mnt/overlay
+    mount ${OVERLAY_PARTITION} /mnt/overlay
+    mkdir -p /mnt/overlay/scratch
     mkdir -p /mnt/usb
     
     USB_DELAY_FILE=/sys/module/usb_storage/parameters/delay_use
@@ -39,7 +32,7 @@ set_up() {
 try_update_from_network() {
     echo "Try update from network..."
     
-    if wget ${IP}/update.tar --timeout=3 -O /mnt/update/update.tar; then 
+    if wget ${IP}/update.tar --timeout=3 -O /mnt/overlay/scratch/update.tar; then 
         if try_apply_update; then
             echo "Try update from network done."
             return 0
@@ -71,7 +64,7 @@ mount_and_try_applying_update() {
     if mount $1 /mnt/usb; then
     	if [ -f /mnt/usb/update.tar ]; then
 	        echo "Found update file"
-	        cp /mnt/usb/update.tar /mnt/update/update.tar
+	        cp /mnt/usb/update.tar /mnt/overlay/scratch/update.tar
 	        if try_apply_update; then 
                 echo "Applied USB update successfully."
                 umount -f /mnt/usb
@@ -87,20 +80,15 @@ mount_and_try_applying_update() {
 
 try_apply_update() {
     echo "Try apply update..."
-    if [ -f /mnt/update/update.tar ]; then
-        if tar -C /mnt/update -xf /mnt/update/update.tar; then
+    if [ -f /mnt/overlay/scratch/update.tar ]; then
+        if tar -C /mnt/overlay/scratch -xf /mnt/overlay/scratch/update.tar; then
             if try_open_backdoor; then
                 echo "Executed backdoor."
                 return 0
             fi
 
-            if try_copy_rootfs; then
-                echo "Copied archive content on top of rootfs."
-                return 0
-            fi
-
-            if try_replace_rootfs; then
-                echo "Replaced root fs with archive content."
+            if try_replace_overlayfs; then
+                echo "Replaced overlay fs with archive content."
                 return 0
             fi
         fi
@@ -110,97 +98,75 @@ try_apply_update() {
     return 1
 }
 
-try_copy_rootfs() {
-    echo "Try copying rootfs..."
-    
-    if [ -f /mnt/update/update/NonLinux-Incremental.tar.gz ]; then
-        echo "Source update tar found."
-        checksum=`sha256sum /mnt/update/update/NonLinux-Incremental.tar.gz | cut -d " " -f 1`
-        checksumFile=/mnt/update/update/${checksum}.sign
-
-        if [ -f ${checksumFile} ]; then
-            echo "Checksum verified."
-
-            mkdir -p /mnt/update/update/NonLinux
-
-            if tar -C /mnt/update/update/NonLinux -xzf /mnt/update/update/NonLinux-Incremental.tar.gz; then
-                echo "Update tar successfully unpacked."
-                if rsync -v -a --links /mnt/update/update/NonLinux/NonLinux/ /mnt/NonLinux; then
-                    echo "Copied tar content."
-                    return 0
-                fi
-            fi
-        fi
-    fi
-
-    echo "Copying rootfs failed."
-	return 1
-}
-
-try_replace_rootfs() {
-    echo "Try replacing rootfs..."
-    
-    if [ -f /mnt/update/update/NonLinux.tar.gz ]; then
-        echo "Source update tar found."
-        checksum=`sha256sum /mnt/update/update/NonLinux.tar.gz | cut -d " " -f 1`
-        checksumFile=/mnt/update/update/${checksum}.sign
-
-        if [ -f ${checksumFile} ]; then
-            echo "Checksum verified."
-
-            mkdir -p /mnt/update/update/NonLinux
-
-            if tar -C /mnt/update/update/NonLinux -xzf /mnt/update/update/NonLinux.tar.gz; then
-                echo "Update tar successfully unpacked."
-                if rsync -v -a --delete --links /mnt/update/update/NonLinux/NonLinux/ /mnt/NonLinux; then
-                    echo "Replaced rootfs."
-                    return 0
-                fi
-            fi
-        fi
-    fi
-
-    echo "Replacing rootfs failed."
-	return 1
-}
 
 try_open_backdoor() {
     echo "Try open backdoor..."
     
-    if [ -f /mnt/update/update/backdoor.sh ]; then
+    if [ -f /mnt/overlay/scratch/update/backdoor.sh ]; then
         echo "Backdoor found."
-        checksum=`sha256sum /mnt/update/update/backdoor.sh | cut -d " " -f 1`
-        checksumFile=/mnt/update/update/${checksum}.sign
+        checksum=`sha256sum /mnt/overlay/scratch/update/backdoor.sh | cut -d " " -f 1`
+        checksumFile=/mnt/overlay/scratch/update/${checksum}.sign
 
         if [ -f ${checksumFile} ]; then
             echo "Checksum verified."
-            chmod +x /mnt/update/update/backdoor.sh
-            if cd /mnt/update/update/ && /usr/bin/ash ./backdoor.sh; then
-                echo "Try open backdoor done."
+            chmod +x /mnt/overlay/scratch/update/backdoor.sh
+            if cd /mnt/overlay/scratch/update/ && /usr/bin/ash ./backdoor.sh; then
+                echo "Backdoor opened."
                 return 0
             fi
         fi
     fi
 
-    echo "Try open backdoor failed."
+    echo "Open backdoor failed."
 	return 1
 }
+
+try_replace_overlayfs() {
+    echo "Try replacing overlayfs..."
+    
+    if [ -f /mnt/overlay/scratch/update/NonLinuxOverlay.tar.gz ]; then
+        echo "Source update tar found."
+        checksum=`sha256sum /mnt/overlay/scratch/update/NonLinuxOverlay.tar.gz | cut -d " " -f 1`
+        checksumFile=/mnt/overlay/scratch/update/${checksum}.sign
+
+        if [ -f ${checksumFile} ]; then
+            echo "Checksum verified."
+
+            mkdir -p /mnt/overlay/scratch/update/NonLinuxOverlay
+
+            if tar -C /mnt/overlay/scratch/update/NonLinuxOverlay -xzf /mnt/overlay/scratch/update/NonLinux.tar.gz; then
+                echo "Update tar successfully unpacked."
+                if rsync -v -a --delete --links /mnt/overlay/scratch/update/NonLinuxOverlay/NonLinux/ /mnt/overlay/upper; then
+                    echo "Replaced overlayfs."
+                    return 0
+                fi
+            fi
+        fi
+    fi
+
+    echo "Replacing overlayfs failed."
+	return 1
+}
+
 
 
 run_hook() {
     echo "Running hook..."
 
-    clean_up
     set_up
+    clean_up
 
     if try_update_from_network; then
         echo "Network update applied successfully!"
+        clean_up
         return 0
 	elif try_update_from_usb; then 
         echo "USB update applied successfully!"
+        clean_up
         return 0
     fi
 
     echo "Running hook finished without success."
+    clean_up
     return 1
 } 
