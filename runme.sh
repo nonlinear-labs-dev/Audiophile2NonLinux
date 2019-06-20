@@ -45,6 +45,8 @@ sed -i 's/Required DatabaseOptional/Never/' /etc/pacman.conf
 sed -i 's/Server.*mettke/#/' /etc/pacman.d/mirrorlist
 sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=1/' /etc/default/grub
 sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT.*$/GRUB_CMDLINE_LINUX_DEFAULT="quiet ip=192.168.10.10:::::eth0:none"/' /etc/default/grub
+sed -i 's/^HOOKS=.*$/HOOKS=\"base udev oroot block filesystems autodetect modconf keyboard net nlhook\"/' /etc/mkinitcpio.conf
+sed -i 's/^BINARIES=.*$/BINARIES=\"tar rsync gzip lsblk udevadm\"/' /etc/mkinitcpio.conf
 
 echo "Copy initial system:"
 cp -ax / /mnt
@@ -85,11 +87,6 @@ arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S cpupower git networkmanager
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs xorgproto xfsprogs cifs-utils emacs-nox lvm2 fuse2"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Su"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Qdt"
-
-
-arch-chroot /mnt /bin/bash -c "sed -i 's/^HOOKS=.*$/HOOKS=\"base udev oroot block filesystems autodetect modconf keyboard net nlhook\"/' /etc/mkinitcpio.conf"
-arch-chroot /mnt /bin/bash -c "sed -i 's/^BINARIES=.*$/BINARIES=\"tar rsync gzip lsblk udevadm\"/' /etc/mkinitcpio.conf"
-arch-chroot /mnt /bin/bash -c "mkinitcpio -p linux-rt"
 
 echo "Generate fstab:"
 genfstab -U /mnt >> /mnt/etc/fstab
