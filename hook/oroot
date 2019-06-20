@@ -1,0 +1,58 @@
+#!/bin/bash
+
+run_hook() {
+   root=/dev/sda2
+
+   fsck_root() {
+      echo "fsck_root disabled"
+      echo &>/dev/null
+   }
+
+   echo "#!/bin/bash
+              mkdir /run/oroot;
+              mount /dev/sda2 /run/oroot;
+              rsync -ax --no-whole-file --inplace --delete / /run/oroot --exclude boot --exclude dev --exclude mnt --exclude proc --exclude run --exclude sys --exclude tmp --exclude usr/bin/overlay_flush;
+              umount /run/oroot &&
+              rm -r /run/oroot;
+              mkdir /run/nloverlay;
+              mount /dev/sda3 /run/nloverlay;
+              rm -rf /run/nloverlay/upper/*;
+              rm -rf /run/nloverlay/work/*;
+              umount /run/nloverlay;
+              rm -r /run/nloverlay" >/overlay_flush
+
+   chmod ug+x /overlay_flush
+   poll_device /dev/sda2 20
+   "$mount_handler" /lroot
+
+   if [ ! -b "/dev/zram0" ]; then
+      modprobe zram num_devices=$(($(nproc) + 2))
+   fi
+
+   mem_size=$(free -m | awk '/Mem/ {print int($2)}')
+   mount troot -t tmpfs -o size=${mem_size}M /troot
+   unset mem_size
+
+   mkdir /nloverlay
+   mount /dev/sda3 /nloverlay
+   mkdir /nloverlay/upper
+   mkdir /nloverlay/work
+   mkdir /nloverlay-fs
+
+   mkdir /troot/upper
+   mkdir /troot/work
+
+   oroot_mount() {
+      echo "Entering custom mount handler oroot_mount"
+      mkdir -p /nloverlay
+      mount /dev/sda3 /nloverlay
+      mkdir -p /nloverlay/upper
+      mkdir -p /nloverlay/work
+      mkdir -p /nloverlay-fs
+      mount -t overlay -o lowerdir=/lroot,upperdir=/nloverlay/upper,workdir=/nloverlay/work overlay /nloverlay-fs
+      mount oroot -t overlay -o lowerdir=/nloverlay-fs,upperdir=/troot/upper,workdir=/troot/work "$1"
+      mv /overlay_flush /new_root/usr/bin/
+   }
+
+   mount_handler=oroot_mount
+}
