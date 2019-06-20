@@ -139,7 +139,7 @@ try_replace_overlayfs() {
 
             rm -rf /nloverlay/os-overlay/*
 
-            if tar -C /nloverlay/os-overlay -xzf /nloverlay/update-scratch/update/NonLinux.tar.gz; then
+            if tar -C /nloverlay/os-overlay -xzf /nloverlay/update-scratch/update/NonLinuxOverlay.tar.gz; then
                 echo "Replaced overlayfs."
                 return 0
             fi
