@@ -10,7 +10,7 @@ fdisk -l ${SSD} | grep "${SSD}[0-9]"
 if [ $? -eq 0 ]
 then
  echo "${SSD} is already partitioned"
- echo "If you are sure to know what you're doing, pleas type: cfdisk ${SSD}"
+ echo "If you are sure to know what you're doing, please type: cfdisk ${SSD}"
  echo "Delete all partitions there manually, write the partition table and retry this skript."
  exit 1
 fi
