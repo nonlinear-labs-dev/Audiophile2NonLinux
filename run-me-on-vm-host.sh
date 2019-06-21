@@ -30,7 +30,7 @@ create_vm() {
     MACHINE_ID=`uuid`
     DVD_ID=`uuid`
 
-    EXISTING_DVD_ID=`vboxmanage list dvds | grep -F "AP-Linux-V.4.0.iso" -B 4 | grep "UUID" | grep -o " [^ ]*" | grep -o "[^ ]*"`
+    EXISTING_DVD_ID=`vboxmanage list dvds | grep -F "AP-Linux-V.4.0.iso" -B 4 | grep "^UUID" | grep -o " [^ ]*" | grep -o "[^ ]*"`
     echo "EXISTING_DVD_ID = ${EXISTING_DVD_ID}"
 
     if [ -n "${EXISTING_DVD_ID}" ]; then 
@@ -39,7 +39,7 @@ create_vm() {
     fi
 
     vboxmanage createmedium disk --filename ${MACHINE_FOLDER}/ePC-disk001.vmdk --size 65536 --format VMDK 
-    HARDDISK_ID=`vboxmanage list hdds | grep -F "${MACHINE_FOLDER}/ePC-disk001.vmdk" -B 4 | grep "UUID" | grep -o " [^ ]*" | grep -o "[^ ]*"`
+    HARDDISK_ID=`vboxmanage list hdds | grep -F "${MACHINE_FOLDER}/ePC-disk001.vmdk" -B 4 | grep "^UUID" | grep -o " [^ ]*" | grep -o "[^ ]*"`
 
     echo "HARDDISK_ID = ${HARDDISK_ID}"
     echo "DVD_ID = ${DVD_ID}"
