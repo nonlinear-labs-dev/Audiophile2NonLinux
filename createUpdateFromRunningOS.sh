@@ -20,7 +20,7 @@ set_up() {
 
 copy_running_os() {
     echo "Copying running os..."
-    if tar -C /nloverlay/runtime-overlay --exclude=/nloverlay/runtime-overlay/C15 --exclude=/nloverlay/runtime-overlay/build/CMakeFiles -czf /nloverlay/update-scratch/update/NonLinuxOverlay.tar.gz .; then
+    if tar -C /nloverlay/runtime-overlay --exclude=./C15 --exclude=./build/CMakeFiles -czf /nloverlay/update-scratch/update/NonLinuxOverlay.tar.gz .; then
         echo "Copying running os done."
         return 0
     fi
