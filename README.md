@@ -27,6 +27,13 @@ After some minutes, your (virtual) machine should contain a NonLinux.
 * boot the NUC from any Linux-USB-Stick
 * cat ePC.tar.gz | tar xzOf - | dd of=/dev/sda bs=1M status=progress
 
+## How to build our binaries on a NonLinux installation
+`
+sudo su
+cd /
+./buildNonlinearLabsBinaries.sh master
+
+
 ## How to create an update from the currenlty running OS:
 - call /createUpdateFromRunningOS.sh
 - copy the file /mnt/update/update.tar
