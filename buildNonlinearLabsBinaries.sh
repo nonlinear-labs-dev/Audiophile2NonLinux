@@ -20,11 +20,6 @@ callChecked() {
     return 1
 }
 
-set_up() {
-    callChecked "Setting up environment" "pacman --noconfirm -S cmake make gcc glibmm pkgconf"
-    return $?
-}
-
 check_out() {
     callChecked "Checking out project" "git clone https://github.com/nonlinear-labs-dev/C15.git && cd C15 && git checkout $1"
     return $?
@@ -36,7 +31,7 @@ build() {
 }
 
 main() {
-    if check_preconditions $1 && set_up && check_out $1 && build; then 
+    if check_preconditions $1 && check_out $1 && build; then 
         return 0
     fi
     return 1
