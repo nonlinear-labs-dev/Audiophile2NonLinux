@@ -5,14 +5,18 @@
   * have VirtualBox installed
   * git clone this project
   * go into the checked out folder and call 
-  > `./run-me-on-vm-host.sh /home/user/Downloads-Folder-Containing-AP-Linux-V.4.0.iso`
+  ```console
+  ./run-me-on-vm-host.sh /home/user/Downloads-Folder-Containing-AP-Linux-V.4.0.iso
+  ```
 * On a NUC Machine
   * Download AP Linux ISO image: https://sourceforge.net/projects/ap-linux/
   * Copy the image onto an USB stick
   * Connect monitor, keyboard, ethernet and stick to the NUC
   * boot from stick (maybe you need to tweak the bios to do so)
   * when booted, type: 
-  > `curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/runme.sh" | sh`
+  ```console
+  curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/runme.sh" | sh
+  ```
   
 After some minutes, your (virtual) machine should contain a NonLinux.
 
@@ -28,9 +32,20 @@ After some minutes, your (virtual) machine should contain a NonLinux.
 * cat ePC.tar.gz | tar xzOf - | dd of=/dev/sda bs=1M status=progress
 
 ## How to build our binaries on a NonLinux installation
-`sudo su;cd /;./buildNonlinearLabsBinaries.sh master`
-> Please notice, the binaries and the build files will be gone on next boot.
+```console
+sudo su
+cd /
+./buildNonlinearLabsBinaries.sh master
+```
+
+Please notice, the binaries and the build files will be gone on next boot.
 
 ## How to create an update from the currenlty running OS:
-- call /createUpdateFromRunningOS.sh
-- copy the file /mnt/update/update.tar
+- call 
+```console
+/createUpdateFromRunningOS.sh
+```
+- copy the file /update.tar, for example via scp:
+```console
+scp /update.tar user@computer:
+```
