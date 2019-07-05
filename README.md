@@ -29,7 +29,7 @@ After some minutes, your (virtual) machine should contain a NonLinux.
 
 ## How to build our binaries on a NonLinux installation
 `sudo su;cd /;./buildNonlinearLabsBinaries.sh master`
-Please notice, the binaries and the build files will be gone on next boot.
+> Please notice, the binaries and the build files will be gone on next boot.
 
 ## How to create an update from the currenlty running OS:
 - call /createUpdateFromRunningOS.sh
