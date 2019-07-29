@@ -36,7 +36,7 @@ set_up() {
 try_update_from_network() {
     echo "Try update from network..."
 
-    if wget ${IP}:8000/update.tar --timeout=3 -O /nloverlay/update-scratch/update.tar; then
+    if wget http://192.168.10.11:8000/update.tar --timeout=3 -O /nloverlay/update-scratch/update.tar; then
         if try_apply_update; then
             echo "Try update from network done."
             return 0
