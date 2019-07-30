@@ -36,15 +36,19 @@ set_up() {
 try_update_from_network() {
     echo "Try update from network..."
     
-    export http_proxy='192.168.10.11:8000'
-    
-    if wget http://192.168.10.11:8000/update.tar --tries=3 -O /nloverlay/update-scratch/update.tar; then
-        if try_apply_update; then
-            echo "Try update from network done."
-            return 0
+    ping -q -cl 192.168.10.11 > /dev/null
+    if [$? -eq 0]; then
+        echo "BBB pingable..."
+        if wget http://192.168.10.11:8000/update.tar --timeout=10 -O /nloverlay/update-scratch/update.tar; then
+            if try_apply_update; then
+                echo "Try update from network done."
+                return 0
+            fi
         fi
+    else
+        echo "BBB not pingable..."
     fi
-
+    
     echo "Try update from network failed."
     return 1
 }
