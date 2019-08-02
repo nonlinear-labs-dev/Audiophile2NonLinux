@@ -76,7 +76,7 @@ for DOWNLOAD_URL in ${DOWNLOAD_URLS}; do
 done
 
 arch-chroot /mnt /bin/bash -c "tar -C /update-packages -xzf /update-packages/NonLinux.pkg.tar.gz"
-arch-chroot /mnt /bin/bash -c "echo 'Server = file:////update-packages/pkg/' > /etc/pacman.d/mirrorlist"
+arch-chroot /mnt /bin/bash -c "echo 'Server = file:///update-packages/pkg/' > /etc/pacman.d/mirrorlist"
 
 echo "Remove unnecessary packages:"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Sy"
