@@ -69,14 +69,14 @@ echo "Downloading NonLinux/Arch packages:"
 arch-chroot /mnt /bin/bash -c "mkdir -p /update-packages"
 arch-chroot /mnt /bin/bash -c "touch /update-packages/NonLinux.pkg.tar.gz"
 
-DOWNLOAD_URLS="http://192.168.0.129:8000 http://192.168.0.132:8000 http://192.168.2.180:8000 http://192.168.0.2:8000 http://185.28.186.202:8000 https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/releases/download/1.0"
+# DOWNLOAD_URLS="http://192.168.0.129:8000 http://192.168.0.132:8000 http://192.168.2.180:8000 http://192.168.0.2:8000 http://185.28.186.202:8000 https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/releases/download/1.0"
 
-for DOWNLOAD_URL in ${DOWNLOAD_URLS}; do
-    arch-chroot /mnt /bin/bash -c "if [ ! -s /update-packages/NonLinux.pkg.tar.gz ]; then wget --tries=1 --timeout=5 '${DOWNLOAD_URL}/NonLinux.pkg.tar.gz' -O /update-packages/NonLinux.pkg.tar.gz; fi"
-done
+# for DOWNLOAD_URL in ${DOWNLOAD_URLS}; do
+#     arch-chroot /mnt /bin/bash -c "if [ ! -s /update-packages/NonLinux.pkg.tar.gz ]; then wget --tries=1 --timeout=5 '${DOWNLOAD_URL}/NonLinux.pkg.tar.gz' -O /update-packages/NonLinux.pkg.tar.gz; fi"
+# done
 
-arch-chroot /mnt /bin/bash -c "tar -C /update-packages -xzf /update-packages/NonLinux.pkg.tar.gz"
-arch-chroot /mnt /bin/bash -c "echo 'Server = file:///update-packages/pkg/' > /etc/pacman.d/mirrorlist"
+# arch-chroot /mnt /bin/bash -c "tar -C /update-packages -xzf /update-packages/NonLinux.pkg.tar.gz"
+# arch-chroot /mnt /bin/bash -c "echo 'Server = file:///update-packages/pkg/' > /etc/pacman.d/mirrorlist"
 
 echo "Remove unnecessary packages:"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Sy"
