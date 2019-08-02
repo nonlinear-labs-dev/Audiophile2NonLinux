@@ -86,7 +86,8 @@ arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs b43-fwcutter bluez-libs g
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs tango-icon-theme xorg-xmessage xf86-input-evdev xf86-input-synaptics zd1211-firmware"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S cpupower git networkmanager"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs xorgproto xfsprogs cifs-utils emacs-nox lvm2 fuse2"
-arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S cmake make gcc glibmm pkgconf"
+arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S cmake make gcc glibmm pkgconf jdk11-openjdk libsoup freetype2"
+arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S avahi boost libpng png++"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Su"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Qdt"
 
