@@ -35,18 +35,11 @@ set_up() {
 
 try_update_from_network() {
     echo "Try update from network..."
-    
-    ping -q -c3 192.168.10.11 > /dev/null
-    if [ $? -eq 0 ]; then
-        echo "BBB pingable..."
-        if wget http://192.168.10.11:8000/update.tar --timeout=10 -O /nloverlay/update-scratch/update.tar; then
-            if try_apply_update; then
-                echo "Try update from network done."
-                return 0
-            fi
+    if wget http://${IP}:8000/update.tar --timeout=3 -O /nloverlay/update-scratch/update.tar; then
+        if try_apply_update; then
+            echo "Try update from network done."
+            return 0
         fi
-    else
-        echo "BBB not pingable..."
     fi
     
     echo "Try update from network failed."
