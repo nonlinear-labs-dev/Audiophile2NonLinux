@@ -68,9 +68,10 @@ choose_boot_option() {
 }
 
 start_script() {
-    sleep 120
-    vboxmanage controlvm ${VM_NAME} keyboardputstring 'curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/runme.sh" | sh'
-    vboxmanage controlvm ${VM_NAME} keyboardputscancode 1c 9c
+    echo ""
+   # sleep 120
+   # vboxmanage controlvm ${VM_NAME} keyboardputstring 'curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/runme.sh" | sh'
+   # vboxmanage controlvm ${VM_NAME} keyboardputscancode 1c 9c
 }
 
 main() {

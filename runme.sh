@@ -16,7 +16,7 @@ then
 fi
  
 echo "Partitioning ${SSD}:"
-curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/sda.sfdisk" | sfdisk ${SSD}
+cat /Audiophile2NonLinux/sda.sfdisk | sfdisk ${SSD}
 echo ";" | sfdisk -a ${SSD}
 
 echo "Creating filesystems:"
@@ -31,12 +31,12 @@ mkdir -p /mnt/boot
 mount ${SSD}1 /mnt/boot
 
 echo "Tweak AP Linux:"
-wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/install/nlhook" -O /lib/initcpio/install/nlhook
-wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/install/oroot" -O /lib/initcpio/install/oroot
-wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/hook/nlhook" -O /lib/initcpio/hooks/nlhook
-wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/hook/oroot" -O /lib/initcpio/hooks/oroot
-wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/createUpdateFromRunningOS.sh" -O /createUpdateFromRunningOS.sh
-wget "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/buildNonlinearLabsBinaries.sh" -O /buildNonlinearLabsBinaries.sh
+cp /Audiophile2NonLinux/install/nlhook /lib/initcpio/install/nlhook
+cp /Audiophile2NonLinux/install/oroot /lib/initcpio/install/oroot
+cp /Audiophile2NonLinux/hook/nlhook /lib/initcpio/hooks/nlhook
+cp /Audiophile2NonLinux/hook/oroot /lib/initcpio/hooks/oroot
+cp /Audiophile2NonLinux/createUpdateFromRunningOS.sh /createUpdateFromRunningOS.sh
+cp /Audiophile2NonLinux/buildNonlinearLabsBinaries.sh /buildNonlinearLabsBinaries.sh
 
 chmod +x /createUpdateFromRunningOS.sh
 chmod +x /buildNonlinearLabsBinaries.sh
@@ -67,18 +67,12 @@ arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./autologin.sh"
 echo "Downloading NonLinux/Arch packages:"
 
 arch-chroot /mnt /bin/bash -c "mkdir -p /update-packages"
-arch-chroot /mnt /bin/bash -c "touch /update-packages/NonLinux.pkg.tar.gz"
-
-DOWNLOAD_URLS="http://192.168.0.129:8000 http://192.168.0.132:8000 http://192.168.2.180:8000 http://192.168.0.2:8000 http://185.28.186.202:8000 https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/releases/download/1.0"
-
-for DOWNLOAD_URL in ${DOWNLOAD_URLS}; do
-    arch-chroot /mnt /bin/bash -c "if [ ! -s /update-packages/NonLinux.pkg.tar.gz ]; then wget --tries=1 --timeout=5 '${DOWNLOAD_URL}/NonLinux.pkg.tar.gz' -O /update-packages/NonLinux.pkg.tar.gz; fi"
-done
+cp /Audiophile2NonLinux/NonLinux.pkg.tar.gz /mnt/update-packages/NonLinux.pkg.tar.gz
 
 arch-chroot /mnt /bin/bash -c "tar -C /update-packages -xzf /update-packages/NonLinux.pkg.tar.gz"
 arch-chroot /mnt /bin/bash -c "echo 'Server = file:///update-packages/pkg/' > /etc/pacman.d/mirrorlist"
 
-echo "Remove unnecessary packages:"
+echo "Maintain packages:"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Sy"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Scc"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Rcs xorg gnome mesa freetype2 ffmpeg ffmpeg2.8 man-db man-pages"
@@ -91,15 +85,15 @@ arch-chroot /mnt /bin/bash -c "pacman --noconfirm -S avahi boost libpng png++"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Su"
 arch-chroot /mnt /bin/bash -c "pacman --noconfirm -Qdt"
 
+arch-chroot /mnt /bin/bash -c "mv /update-packages/pkg/gwt-2.8.2 /"
+arch-chroot /mnt /bin/bash -c "rm -rf /update-packages"
+
 echo "Generate fstab:"
 genfstab -U /mnt >> /mnt/etc/fstab
 
 echo "Configure cpupower:"
 sed -i "s/#governor=.*$/governor='performance'/" /mnt/etc/default/cpupower
 arch-chroot /mnt /bin/bash -c "systemctl enable cpupower"
-
-# echo "Build Nonlinear Labs software:"
-# arch-chroot /mnt /bin/bash -c "cd / && /buildNonlinearLabsBinaries.sh dsp_optimization"
 
 echo "Remove some artifacts:"
 truncate -s 0 /mnt/home/sscl/.zprofile
@@ -120,4 +114,5 @@ arch-chroot /mnt /bin/bash -c "systemctl mask systemd-tmpfiles-setup"
 arch-chroot /mnt /bin/bash -c "systemctl mask systemd-tmpfiles-clean"
 arch-chroot /mnt /bin/bash -c "systemctl mask systemd-tmpfiles-setup-dev"
 
-echo "Done."
+arch-chroot /mnt /bin/bash -c "rm /etc/profile.d/runme.sh"
+arch-chroot /mnt /bin/bash -c "rm -rf /Audiophile2NonLinux"

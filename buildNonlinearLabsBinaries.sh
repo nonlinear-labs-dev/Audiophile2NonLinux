@@ -27,7 +27,7 @@ check_out() {
 
 build() {
     callChecked "Building project" "mkdir build && cd build && 
-    cmake -D CMAKE_BUILD_TYPE=Release -D JARSDIR=/update-packages/pkg/gwt-2.8.2 ../C15 && make install && systemctl enable /usr/local/etc/systemd/system/audio-engine.service"
+    cmake -D CMAKE_BUILD_TYPE=Release -D JARSDIR=/gwt-2.8.2 ../C15 && make install && systemctl enable /usr/local/etc/systemd/system/audio-engine.service"
     return $?
 }
 
