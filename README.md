@@ -1,24 +1,24 @@
 # Audiophile2NonLinux
-## How to turn Audiophile Linux into NonLinux
+## How to create a NonLinux image file
 * In a VM:
   * Download AP Linux ISO image: https://sourceforge.net/projects/ap-linux/
-  * have VirtualBox installed
   * git clone this project
   * go into the checked out folder and call 
   ```console
-  ./run-me-on-vm-host.sh /home/user/Downloads-Folder-Containing-AP-Linux-V.4.0.iso
+  ./createNonLinuxImage.sh /home/user/Downloads-Folder-Containing/AP-Linux-V.4.0.iso /where/you/wish/the/new/img/AP-Linux-V.4.0.iso
+  ```
+  * Now, you can either copy the image onto a stick to boot a NUC from, or boot a virtual machine from the image.
+
+## Install NonLinux
+* have VirtualBox installed
+  ```console
+  ./run-me-on-vm-host.sh /where/you/wish/the/new/img/AP-Linux-V.4.0.iso
   ```
 * On a NUC Machine
-  * Download AP Linux ISO image: https://sourceforge.net/projects/ap-linux/
-  * Copy the image onto an USB stick
-  * Connect monitor, keyboard, ethernet and stick to the NUC
+  * Copy the image /where/you/wish/the/new/img/AP-Linux-V.4.0.iso onto an USB stick
+  * Connect monitor, keyboard and stick to the NUC
   * boot from stick (maybe you need to tweak the bios to do so)
-  * when booted, type: 
-  ```console
-  curl -L "https://github.com/nonlinear-labs-dev/Audiophile2NonLinux/raw/master/runme.sh" | sh
-  ```
-  
-After some minutes, your (virtual) machine should contain a NonLinux.
+  * After some minutes, your (virtual) machine should contain a NonLinux.
 
 ## How to create a flash image:
 * open terminal
