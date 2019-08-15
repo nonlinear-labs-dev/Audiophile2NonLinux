@@ -46,7 +46,7 @@ download_artifacts() {
 mount_original() {
     echo $FUNCNAME
     mkdir -p $STAGING_DIR/original
-    sudo mount ~/Downloads/AP-Linux-V.4.0.iso $STAGING_DIR/original -o loop,ro
+    sudo mount $ISO_IN $STAGING_DIR/original -o loop,ro
 }
 
 create_copy() {
