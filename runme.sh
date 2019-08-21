@@ -54,6 +54,9 @@ sed -i 's/^BINARIES=.*$/BINARIES=\"tar rsync gzip lsblk udevadm\"/' /etc/mkinitc
 echo "Copy initial system:"
 cp -ax / /mnt
 
+# do not link /mnt/etc/resolv.conf to /etc/resolv.conf, as the former will be updated
+sed -i 's/^chroot_add_resolv_conf /#/' /bin/arch-chroot
+
 echo "Do APLinux stuff:"
 arch-chroot /mnt /bin/bash -c "cd /etc/apl-files && ./runme.sh"
 

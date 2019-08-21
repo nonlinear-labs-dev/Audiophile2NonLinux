@@ -6,7 +6,6 @@ ISO_OUT=$2
 STAGING_DIR=/tmp/NonLinux-repackaging-$TIMESTAMP
 
 error() {
-    echo $FUNCNAME
     echo "$1"
     clean_up
     exit
@@ -22,18 +21,15 @@ check_preconditions() {
         error "Input ISO image does not exist."
     fi
 
-    if ! which mksquashfs; then 
-        error "Please install mksquashfs"
-    fi
-
-    if ! which md5sum; then 
-        error "Please install md5sum"
-    fi
-
-    if ! which unsquashfs; then 
-        error "Please install unsquashfs"
-    fi
-
+    neededBins=(xorriso mksquashfs md5sum isohybrid)
+    for a in ${neededBins[@]}
+    do
+	if ! which $a > /dev/null; then 
+            error "Please install $a"
+	    exit
+	fi
+    done
+    
     echo "Creating ISO $ISO_OUT from $ISO_IN."
 }
 
@@ -45,15 +41,18 @@ download_artifacts() {
 
 mount_original() {
     echo $FUNCNAME
-    mkdir -p $STAGING_DIR/original
-    sudo mount $ISO_IN $STAGING_DIR/original -o loop,ro
+    mkdir -p $STAGING_DIR/original/p1
+    mkdir -p $STAGING_DIR/original/p2
+    LOOPDEVICE=$(sudo losetup -f --show -P $ISO_IN)
+    sudo mount ${LOOPDEVICE}p1 $STAGING_DIR/original/p1 
+    sudo mount ${LOOPDEVICE}p2 $STAGING_DIR/original/p2 
 }
 
 create_copy() {
     echo $FUNCNAME
     rm -rf $STAGING_DIR/copy
     cp -a $STAGING_DIR/original $STAGING_DIR/copy
-    (cd $STAGING_DIR; sudo unsquashfs $STAGING_DIR/copy/arch/x86_64/airootfs.sfs)
+    (cd $STAGING_DIR; sudo unsquashfs $STAGING_DIR/copy/p1/arch/x86_64/airootfs.sfs)
 }
 
 modify_copy() {
@@ -66,27 +65,27 @@ modify_copy() {
 
 create_iso() {
     echo $FUNCNAME
-    rm $STAGING_DIR/copy/arch/x86_64/airootfs.sfs
-    sudo mksquashfs $STAGING_DIR/squashfs-root $STAGING_DIR/copy/arch/x86_64/airootfs.sfs
+    rm $STAGING_DIR/copy/p1/arch/x86_64/airootfs.sfs
+    sudo mksquashfs $STAGING_DIR/squashfs-root $STAGING_DIR/copy/p1/arch/x86_64/airootfs.sfs
     sudo rm -rf $STAGING_DIR/squashfs-root
-    md5sum $STAGING_DIR/copy/arch/x86_64/airootfs.sfs > $STAGING_DIR/copy/arch/x86_64/airootfs.md5
-    (cd $STAGING_DIR/copy; sudo genisoimage -l -r -J -V "ARCH_201704" -b isolinux/isolinux.bin -no-emul-boot -boot-load-size 4 -boot-info-table -c isolinux/boot.cat -o $ISO_OUT ./)
+    md5sum $STAGING_DIR/copy/p1/arch/x86_64/airootfs.sfs > $STAGING_DIR/copy/p1/arch/x86_64/airootfs.md5
+    (cd $STAGING_DIR/copy/p1; sudo genisoimage -l -r -J -V "ARCH_201704" -b isolinux/isolinux.bin -no-emul-boot -boot-load-size 4 -boot-info-table -c isolinux/boot.cat -o $ISO_OUT ./)
 }
 
 unmount_original() {
     echo $FUNCNAME
     if [ -d $STAGING_DIR/original ]; then
-        sudo umount $STAGING_DIR/original
+        sudo umount $STAGING_DIR/original/p1
+	sudo umount $STAGING_DIR/original/p2
     fi
 }
 
 clean_up() {
     unmount_original
-    # sudo rm -rf $STAGING_DIR
+    sudo rm -rf $STAGING_DIR
 }
 
 main() {
-    echo $FUNCNAME
     check_preconditions
     download_artifacts
     mount_original
