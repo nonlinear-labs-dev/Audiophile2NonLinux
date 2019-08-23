@@ -3,7 +3,7 @@
 TIMESTAMP=`date +%m-%d-%Y-%H:%M:%S`
 ISO_IN=$1
 ISO_OUT=$2
-STAGING_DIR=/tmp/NonLinux-repackaging-$TIMESTAMP
+STAGING_DIR=$HOME/NonLinux-repackaging-$TIMESTAMP
 
 error() {
     echo "$1"
@@ -21,7 +21,7 @@ check_preconditions() {
         error "Input ISO image does not exist."
     fi
 
-    neededBins=(xorriso mksquashfs md5sum isohybrid)
+    neededBins=(genisoimage mksquashfs md5sum isohybrid)
     for a in ${neededBins[@]}
     do
 	if ! which $a > /dev/null; then 
@@ -70,6 +70,8 @@ create_iso() {
     sudo rm -rf $STAGING_DIR/squashfs-root
     md5sum $STAGING_DIR/copy/p1/arch/x86_64/airootfs.sfs > $STAGING_DIR/copy/p1/arch/x86_64/airootfs.md5
     (cd $STAGING_DIR/copy/p1; sudo genisoimage -l -r -J -V "ARCH_201704" -b isolinux/isolinux.bin -no-emul-boot -boot-load-size 4 -boot-info-table -c isolinux/boot.cat -o $ISO_OUT ./)
+    sudo isohybrid $ISO_OUT
+    sudo chown $USER $ISO_OUT
 }
 
 unmount_original() {

@@ -3,11 +3,12 @@
 ISO_FILE=$1
 STICK=$2
 TIMESTAMP=`date +%m-%d-%Y-%H:%M:%S`
-MOUNTPOINT=/tmp/create-USB-stick-$TIMESTAMP
+MOUNTPOINT=$HOME/create-USB-stick-$TIMESTAMP
 
 clean_up() {
     sudo umount $MOUNTPOINT/src
     sudo umount $MOUNTPOINT/tgt
+    sudo rm -rf $MOUNTPOINT
     echo $1    
 }
 
