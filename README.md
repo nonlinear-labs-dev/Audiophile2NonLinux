@@ -15,21 +15,10 @@
   ./run-me-on-vm-host.sh /where/you/wish/the/new/img/AP-Linux-V.4.0.iso
   ```
 * On a NUC Machine
-  * Copy the image /where/you/wish/the/new/img/AP-Linux-V.4.0.iso onto an USB stick
-  * Connect monitor, keyboard and stick to the NUC
-  * boot from stick (maybe you need to tweak the bios to do so)
-  * After some minutes, your (virtual) machine should contain a NonLinux.
-
-## How to create a flash image:
-* open terminal
-* navigate into ePC folder (mine is at ~/VirtualBox VMs/ePC/)
-* type: vboxmanage clonehd --format RAW ./ePC-disk001.vmdk ./ePC.raw
-* you may want to create an archive: tar -czf ./ePC.tar.gz ./ePC.raw
-* and remove the raw file: rm ./ePC.raw
-
-## How to flash the image:
-* boot the NUC from any Linux-USB-Stick
-* cat ePC.tar.gz | tar xzOf - | dd of=/dev/sda bs=1M status=progress
+  * attach an USB stick to your PC
+  * with lsblk, retieve the device file of the stick, e.g. /dev/sdb
+  * call ./createUSBStick /path/to/NonLinux.iso /dev/sdX
+  * attach that stick to the NUC and boot
 
 ## How to build our binaries on a NonLinux installation
 ```console
