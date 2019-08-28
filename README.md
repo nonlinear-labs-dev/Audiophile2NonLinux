@@ -17,7 +17,7 @@
 * On a NUC Machine
   * attach an USB stick to your PC
   * with lsblk, retieve the device file of the stick, e.g. /dev/sdb
-  * call ./createUSBStick /path/to/NonLinux.iso /dev/sdX
+  * call ./createUSBStick.sh /path/to/NonLinux.iso /dev/sdX
   * attach that stick to the NUC and boot
   * tweak BIOS to allow Boot from USB first instead of UEFI Shell. Otherwise the USB has to manually be chosen via UEFI Shell or in BIOS by choosing the bootable device [F10 on Intel in our case]
 
