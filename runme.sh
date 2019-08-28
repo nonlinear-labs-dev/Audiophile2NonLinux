@@ -5,15 +5,13 @@ echo "Starting transormation of AP Linux into Nonlinux:"
 SSD_NAME=`lsblk -o RM,NAME | grep "^ 0" | grep -o "sd." | uniq`
 SSD=/dev/${SSD_NAME}
 
-fdisk -l ${SSD} | grep "${SSD}[0-9]"
-
-if [ $? -eq 0 ]
-then
+while fdisk -l ${SSD} | grep "${SSD}[0-9]"; do
  echo "${SSD} is already partitioned"
  echo "If you are sure to know what you're doing, please type: cfdisk ${SSD}"
  echo "Delete all partitions there manually, write the partition table and retry this skript."
- exit 1
-fi
+ echo "Here you have a shell for fixing the issue. Once you close the shell (Ctrl+D), a new attempt will be made."
+ /bin/bash
+done
  
 echo "Partitioning ${SSD}:"
 cat /Audiophile2NonLinux/sda.sfdisk | sfdisk ${SSD}
