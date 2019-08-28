@@ -2,8 +2,8 @@
 
 check_preconditions() {
     echo "Checking preconditions..."
-    AP="$1/AP-Linux-V.4.0.iso"
-
+    AP="$1"
+    
     if [ ! uuid ]; then 
         echo "UUID binary not installed"
         return 1
