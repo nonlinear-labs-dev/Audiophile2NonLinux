@@ -30,7 +30,7 @@ create_vm() {
     MACHINE_ID=`uuid`
     DVD_ID=`uuid`
 
-    EXISTING_DVD_ID=`vboxmanage list dvds | grep -F "AP-Linux-V.4.0.iso" -B 4 | grep "^UUID" | grep -o " [^ ]*" | grep -o "[^ ]*"`
+    EXISTING_DVD_ID=`vboxmanage list dvds | grep -F "$AP" -B 4 | grep "^UUID" | grep -o " [^ ]*" | grep -o "[^ ]*"`
     echo "EXISTING_DVD_ID = ${EXISTING_DVD_ID}"
 
     if [ -n "${EXISTING_DVD_ID}" ]; then 
