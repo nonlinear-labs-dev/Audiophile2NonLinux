@@ -15,9 +15,21 @@ first-lba: 2048
 
 executeAsRoot() {
     echo "sscl" | sshpass -p 'sscl' ssh sscl@$IP "sudo -S /bin/bash -c '$1'"    
+    return $?
 }
 
-echo "TODO: Check that sda5 is at correct position and of expected size!"
+executeAsRoot "sfdisk -d /dev/sda"
+executeAsRoot "sfdisk -d /dev/sda | grep sda5"
+
+if ! executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 42049536"; then
+    echo "sda5 is not expected position"
+    exit 1
+fi
+
+if ! executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 20482422"; then
+    echo "sda5 is not of expected size"
+    exit 1
+fi
 
 executeAsRoot "umount /boot/efi"
 executeAsRoot "umount /mnt"
@@ -53,3 +65,4 @@ executeAsRoot "mount --rbind /proc /mnt/proc"
 executeAsRoot "chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch_grub --recheck"
 executeAsRoot "chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg"
 
+executeAsRoot "reboot"
