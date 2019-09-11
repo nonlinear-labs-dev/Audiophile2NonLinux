@@ -28,6 +28,32 @@ quit() {
     exit 1
 }
 
+print_scp_progress() {
+    TARGET_SIZE="0"
+    SOURCE_SIZE=$(stat -c %s $2)
+
+    executeAsRoot "touch $2"
+
+    while [ ! "$TARGET_SIZE" = "$SOURCE_SIZE" ]; do
+        TARGET_SIZE=$(sshpass -p 'sscl' ssh sscl@$IP "stat -c %s $3")
+        echo "todo: $SOURCE_SIZE bytes"
+        echo "done: $TARGET_SIZE bytes"
+        cout "$1" "copying $TARGET_SIZE/$SOURCE_SIZE"
+        sleep 1
+    done
+}
+
+print_dd_progress() {
+    MSG=$1
+    FILE=$2    
+    touch $FILE
+    while [ -e "$FILE" ]; do
+        OUT=$(cat $FILE | tr '\r' '\n' | tail -n1 | grep -o "[0-9]* bytes")
+        cout "$1" "dumping $OUT"
+    done    
+} 
+
+
 check_preconditions() {
     cout "Checking preconditions..."
     [ -z "$IP" ] && quit "usage: $0 <IP-of-ePC>"
@@ -72,17 +98,23 @@ copy_partition_content() {
     cout "Copying partitions content..." "Chmod partition 3...."
     executeAsRoot "chmod 777 /mnt" || quit "Could not chmod partition 3, update failed, device probably bricked."
     cout "Copying partition 1 content..." "Copying partition 1 content to temporary storage...."
+    print_scp_progress "Copying partition 1 content..." ./p1.raw.gz /mnt/p1.raw.gz &
     sshpass -p 'sscl' scp ./p1.raw.gz sscl@$IP:/mnt || quit "Could not copy partition 1 content onto device. Update failed, device probably bricked."
     cout "Copying partition 2 content..." "Copying partition 2 content to temporary storage...."
+    print_scp_progress "Copying partition 2 content..." ./p2.raw.gz /mnt/p2.raw.gz &
     sshpass -p 'sscl' scp ./p2.raw.gz sscl@$IP:/mnt || quit "Could not copy partition 2 content onto device. Update failed, device probably bricked."
     cout "Copying partitions content done."
 }
 
 dd_partitions() {
-    cout "Dumping partition 1 content..." 
-    executeAsRoot "cat /mnt/p1.raw.gz | gzip -d - | dd of=/dev/sda1 bs=1M status=progress"  || quit "Could not dd partition 1. Update failed, device probably bricked."
-    cout "Dumping partition 2 content..." 
-    executeAsRoot "cat /mnt/p2.raw.gz | gzip -d - | dd of=/dev/sda2 bs=1M status=progress"  || quit "Could not dd partition 2. Update failed, device probably bricked."
+    print_dd_progress "Dumping partition 1 content..." /tmp/dd1.log &
+    executeAsRoot "cat /mnt/p1.raw.gz | gzip -d - | dd of=/dev/sda1 bs=1M status=progress" > /tmp/dd1.log 2>&1  || quit "Could not dd partition 1. Update failed, device probably bricked."
+    rm /tmp/dd1.log
+    
+    print_dd_progress "Dumping partition 2 content..." /tmp/dd2.log &
+    executeAsRoot "cat /mnt/p2.raw.gz | gzip -d - | dd of=/dev/sda2 bs=1M status=progress" > /tmp/dd2.log 2>&1 || quit "Could not dd partition 2. Update failed, device probably bricked."
+    rm /tmp/dd2.log
+
     cout "Dumping partitions content done." 
 }
 
@@ -95,13 +127,15 @@ unmount_tmp() {
 
 copy_partition_3_content() {
     cout "Copying partition 3 content..." "Copying partition 3 content to temporary storage...."
+    print_scp_progress "Copying partition 3 content..." ./p3.raw.gz /mnt/p3.raw.gz &
     sshpass -p 'sscl' scp ./p3.raw.gz sscl@$IP:/mnt || quit "Could not copy partition 3 content onto device. Update failed, device probably bricked."
     cout "Copying partition 3 content done."
 }
 
 dd_partition_3() {
-    cout "Dumping partition 3 content..." 
-    executeAsRoot "cat /mnt/p3.raw.gz | gzip -d - | dd of=/dev/sda3 bs=1M status=progress" || quit "Could not dd partition 3. Update failed, device probably bricked."
+    print_dd_progress "Dumping partition 3 content..." /tmp/dd3.log &
+    executeAsRoot "cat /mnt/p3.raw.gz | gzip -d - | dd of=/dev/sda3 bs=1M status=progress" > /tmp/dd3.log 2>&1 || quit "Could not dd partition 3. Update failed, device probably bricked."
+    rm /tmp/dd3.log
     cout "Dumping partition 3 content done." 
 }
 
@@ -115,6 +149,7 @@ install_grub() {
     cout "Finalization - installing grub ..." 
     executeAsRoot "chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch_grub --recheck" || quit "grub-install failed. Update failed, device probably bricked."
     executeAsRoot "chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg" || quit "grub-mkconfig failed. Update failed, device probably bricked."
+    executeAsRoot "chroot /mnt mkinitcpio -p linux-rt" || quit "mkinitcpio failed. Update failed, device probably bricked."
     cout "Finalization done." 
 }
 
