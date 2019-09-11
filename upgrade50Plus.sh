@@ -2,6 +2,28 @@
 
 IP=$1
 
+clear_displays() {
+    if [ -e /nonlinear/text2soled/text2soled ]; then
+        /nonlinear/text2soled/text2soled clear
+    fi
+}
+
+boled() {
+    if [ -e /nonlinear/text2soled/text2soled ]; then
+        /nonlinear/text2soled/text2soled "$1" 0 36
+    else
+        echo "BOLED MESSAGE: $1"
+    fi
+}
+
+soled() {
+    if [ -e /nonlinear/text2soled/text2soled ]; then
+        /nonlinear/text2soled/text2soled "$1" 0 84
+    else
+        echo "SOLED MESSAGE: $1"
+    fi
+}   
+
 cout() {
     SOLED="$1"
     BOLED="$2"
@@ -14,8 +36,9 @@ cout() {
         return 1
     fi
 
-    echo "SOLED MESSAGE: $SOLED"
-    echo "BOLED MESSAGE: $BOLED"
+    clear_displays
+    boled "$BOLED"
+    soled "$SOLED"
 }
 
 executeAsRoot() {
@@ -24,18 +47,19 @@ executeAsRoot() {
 }
 
 quit() {
-    echo "$1"
+    cout "$1"
     exit 1
 }
 
 print_scp_progress() {
+    
     TARGET_SIZE="0"
-    SOURCE_SIZE=$(stat -c %s $2)
+    SOURCE_SIZE=$(ls -lah $2 | awk {'print $5'})
 
     executeAsRoot "touch $2"
 
     while [ ! "$TARGET_SIZE" = "$SOURCE_SIZE" ]; do
-        TARGET_SIZE=$(sshpass -p 'sscl' ssh sscl@$IP "stat -c %s $3")
+        TARGET_SIZE=$(sshpass -p 'sscl' ssh sscl@$IP "ls -lah $3 | awk {'print \$5'}")
         echo "todo: $SOURCE_SIZE bytes"
         echo "done: $TARGET_SIZE bytes"
         cout "$1" "copying $TARGET_SIZE/$SOURCE_SIZE"
@@ -50,6 +74,7 @@ print_dd_progress() {
     while [ -e "$FILE" ]; do
         OUT=$(cat $FILE | tr '\r' '\n' | tail -n1 | grep -o "[0-9]* bytes")
         cout "$1" "dumping $OUT"
+        sleep 1 
     done    
 } 
 
@@ -61,6 +86,12 @@ check_preconditions() {
     executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 42049536" || quit "ePC partition 5 is not expected position, update failed."
     executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 20482422" || quit "ePC partition 5 is not of expected size, update failed."
     cout "Checking preconditions done."
+}
+
+tear_down_playground() {
+    systemctl stop playground
+    systemctl stop bbbb
+    cout "Nonlinear Labs processes stopped."
 }
 
 unmount_doomed() {
@@ -154,11 +185,26 @@ install_grub() {
 }
 
 reboot_device() {
+    cout "Rebooting ePC..."
+
     executeAsRoot "reboot"
+    
+    sleep 5
+    while ! ping -c1 $IP; do 
+        sleep 1
+    done
+    
+    cout "ePC has been successfully upgraded!"
+}
+
+start_playground() {
+    systemctl start bbbb
+    systemctl start playground
 }
 
 main() {
     check_preconditions
+    tear_down_playground
     unmount_doomed
     create_partitions
     copy_partition_content
@@ -168,8 +214,7 @@ main() {
     dd_partition_3
     install_grub
     reboot_device
-
-    cout "ePC has been successfully upgraded!"
+    start_playground
     exit 0;
 }
 
