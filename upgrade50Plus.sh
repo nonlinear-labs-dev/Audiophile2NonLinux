@@ -52,17 +52,18 @@ quit() {
 }
 
 print_scp_progress() {
-    
     TARGET_SIZE="0"
     SOURCE_SIZE=$(ls -lah $2 | awk {'print $5'})
 
+    TARGET_SIZE_BYTES="0"
+    SOURCE_SIZE_BYTES=$(ls -la $2 | awk {'print $5'})
+    
     executeAsRoot "touch $2"
 
-    while [ ! "$TARGET_SIZE" = "$SOURCE_SIZE" ]; do
+    while [ ! "$TARGET_SIZE_BYTES" = "$SOURCE_SIZE_BYTES" ]; do
         TARGET_SIZE=$(sshpass -p 'sscl' ssh sscl@$IP "ls -lah $3 | awk {'print \$5'}")
-        echo "todo: $SOURCE_SIZE bytes"
-        echo "done: $TARGET_SIZE bytes"
-        cout "$1" "copying $TARGET_SIZE/$SOURCE_SIZE"
+        TARGET_SIZE_BYTES=$(sshpass -p 'sscl' ssh sscl@$IP "ls -la $3 | awk {'print \$5'}")
+        cout "$1" "copying $TARGET_SIZE of $SOURCE_SIZE"
         sleep 1
     done
 }
