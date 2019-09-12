@@ -3,7 +3,7 @@
 IP=$1
 
 t2s() {
-    /nonlinear/text2soled/t2o multitext "-- Do not switch off! --@s2c" "$1" "$2" "$3" "$4" "$5" "$6"
+    /nonlinear/text2soled/text2soled multitext "- Do not switch off! -@s2c" "$1" "$2" "$3" "$4" "$5" "$6"
 }
 
 pretty() {
