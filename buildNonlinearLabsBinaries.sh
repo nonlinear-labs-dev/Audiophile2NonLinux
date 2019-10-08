@@ -34,8 +34,7 @@ build(){
 }
 
 main() {
-    #if check_preconditions $BRANCH && checkout $BRANCH && build; then
-    if check_preconditions $BRANCH && build; then
+    if check_preconditions $BRANCH && checkout $BRANCH && build; then
         return 0
     fi
     return 1
