@@ -1,6 +1,9 @@
 #!/bin/bash
 
 IP=$1
+SSD_SIZE=$2
+PART5POS=0
+PART5SIZE=0
 
 t2s() {
     /nonlinear/text2soled/text2soled multitext "- Do not switch off! -@s2c" "$1" "$2" "$3" "$4" "$5" "$6"
@@ -18,7 +21,7 @@ pretty() {
 }
 
 executeAsRoot() {
-    echo "sscl" | sshpass -p 'sscl' ssh sscl@$IP "sudo -S /bin/bash -c '$1' 1>&2 > /dev/null"
+    echo "sscl" | sshpass -p 'sscl' ssh -o StrictHostKeyChecking=no sscl@$IP "sudo -S /bin/bash -c '$1' 1>&2 > /dev/null"
     return $?
 }
 
@@ -60,8 +63,30 @@ check_preconditions() {
     pretty "Checking preconditions..." "" "" "Checking" "preconditions..."
     [ -z "$IP" ] && quit "Usage:" "$0 <IP-of-ePC>" "" "wrong usage" ""
     ping -c1 $IP 1>&2 > /dev/null || quit "No connection!" "ePC is not reachable at" "$IP, update failed." "Update failed." "ePC not reachable."
-    executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 42049536" || quit "Unexpected partition" "ePC partition 5 is not at" "expected position, update failed." "Update failed." "partition error"
-    executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 20482422" || quit "Unexpected partition" "ePC partition 5 is not of" "expected size, update failed." "Update failed." "partition error"
+    if [ $SSD_SIZE -eq 32 ]; then
+        pretty "ePC SSD Size" "$SSD_SIZE GB" "" "ePC SSD Size" "$SSD_SIZE GB"
+        executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 42049536" || quit "Unexpected partition" "ePC partition 5 is not at" "expected position, update failed." "Update failed." "partition error"
+        executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 20482422" || quit "Unexpected partition" "ePC partition 5 is not of" "expected size, update failed." "Update failed." "partition error"
+        PART5POS=42049536
+        PART5SIZE=20482422
+        echo "PART5POS $PART5POS PART5SIZE $PART5SIZE"
+    elif [ $SSD_SIZE -eq 64 ]; then
+        pretty "ePC SSD Size" "$SSD_SIZE GB" "" "ePC SSD Size" "$SSD_SIZE GB"
+        executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 62531584" || quit "Unexpected partition" "ePC partition 5 is not at" "expected position, update failed." "Update failed." "partition error"
+        executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 62513152" || quit "Unexpected partition" "ePC partition 5 is not of" "expected size, update failed." "Update failed." "partition error"
+        PART5POS=62531584
+        PART5SIZE=62513152
+        echo "PART5POS $PART5POS PART5SIZE $PART5SIZE"
+    elif [ $SSD_SIZE -eq 120 ]; then
+        pretty "ePC SSD Size" "$SSD_SIZE GB" "" "ePC SSD Size" "$SSD_SIZE GB"
+        executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 62531584" || quit "Unexpected partition" "ePC partition 5 is not at" "expected position, update failed." "Update failed." "partition error"
+        executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 62513152" || quit "Unexpected partition" "ePC partition 5 is not of" "expected size, update failed." "Update failed." "partition error"
+        PART5POS=62531584
+        PART5SIZE=62513152
+        echo "PART5POS $PART5POS PART5SIZE $PART5SIZE"
+    else
+        pretty "ePC SSD Size mismatch" "" "" "ePC SSD Size" "mismatch"
+    fi
     pretty "Checking preconditions" "done." "" "Checking preconditions" "done."
 }
 
@@ -90,7 +115,7 @@ create_partitions() {
           /dev/sda2 : start=     1050624, size=    16777216, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=274A1E65-7546-4887-86DD-771BAC588588
           /dev/sda3 : start=    17827840, size=    16777216, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=E30DE52F-B006-442E-9A4A-F332A9A0FF00
           /dev/sda4 : start=    34605056, size=     7444480, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=22c47cae-cf10-11e9-b217-6b290f556266
-          /dev/sda5 : start=    42049536, size=    20482422, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=45c5a8ae-cf10-11e9-aefa-5f647edf4354"
+          /dev/sda5 : start=   $PART5POS, size=  $PART5SIZE, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=45c5a8ae-cf10-11e9-aefa-5f647edf4354"
     
     executeAsRoot "echo \"$PART\" | sfdisk --no-reread /dev/sda" || quit "Partitioning failed." "Could not repartition the" "ePC SSD, update failed." "Update failed:" "Partitioning failed."
     executeAsRoot "partprobe" || quit "Partitioning" "Could not re-read the SSD" "partition table. Update failed" "Update failed:" "re-read part. table failed"
@@ -113,7 +138,7 @@ copy_partition_content() {
     
     print_scp_progress "2" ./p2.raw.gz /mnt/p2.raw.gz &
     sshpass -p 'sscl' scp ./p2.raw.gz sscl@$IP:/mnt || quit "Copying failed." "Could not copy p2.raw.gz." "Update failed." "Update failed:" "copy part 2 failed"
-    
+
     pretty "Copying..." "partitions content done." "" "Copying..." "partitions done."
 }
 
@@ -171,15 +196,35 @@ install_grub() {
 }
 
 reboot_device() {
-    pretty "Rebooting ePC..." "Please wait while" "the ePC is rebooting." "Rebooting ePC..." "Please wait."
-
+    pretty "Rebooting ePC..." "Please wait a while" "the ePC is rebooting." "Rebooting ePC..." "Please wait."
     executeAsRoot "reboot"
-    
     sleep 5
-    while ! ping -c1 $IP; do 
+
+    while true; do
+        rm /root/.ssh/known_hosts &> /dev/null;
+        if executeAsRoot "exit"; then
+            break
+        fi
         sleep 1
     done
-    
+
+    pretty "" "Cleaning up..." "" "Cleaning Up..." ""
+    rm /root/.ssh/known_hosts &> /dev/null
+    executeAsRoot "sfdisk --delete /dev/sda 4" || quit "" "Failed clean up!" "del_sda4" "Failed clean up!" "del_sda4"
+    executeAsRoot "sfdisk --delete /dev/sda 5" || quit "" "Failed clean up!" "del_sda5" "Failed clean up!" "del_sda5"
+    executeAsRoot "echo \";\" | sfdisk -a --no-reread /dev/sda" || quit "" "Failed clean up!" "mk_part" "Failed clean up!" "mk_part"
+    executeAsRoot "echo \"y\" | mkfs.ext4 /dev/sda4" || "" "Failed clean up!" "mkfs" "Failed clean up!" "mkfs"
+    executeAsRoot "reboot"
+    sleep 5
+
+    while true; do
+        rm /root/.ssh/known_hosts &> /dev/null;
+        if executeAsRoot "exit"; then
+            break
+        fi
+        sleep 1
+    done
+
     pretty "" "Your C15 has been" "successfully upgraded!" "Your C15 has been" "successfully upgraded."
 }
 
@@ -189,18 +234,18 @@ start_playground() {
 }
 
 main() {
-    check_preconditions
-    tear_down_playground
-    unmount_doomed
-    create_partitions
-    copy_partition_content
-    dd_partitions
-    unmount_tmp
-    copy_partition_3_content
-    dd_partition_3
-    install_grub
+    #check_preconditions
+    #tear_down_playground
+    #unmount_doomed
+    #create_partitions
+    #copy_partition_content
+    #dd_partitions
+    #unmount_tmp
+    #copy_partition_3_content
+    #dd_partition_3
+    #install_grub
     reboot_device
-    start_playground
+    #start_playground
     exit 0
 }
 
