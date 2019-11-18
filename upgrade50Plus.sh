@@ -1,9 +1,10 @@
 #!/bin/bash
 
 IP=$1
-SSD_SIZE=$2
+SSD_SIZE=0
 PART5POS=0
 PART5SIZE=0
+UPDATE_VERS="TBD"
 
 t2s() {
     /nonlinear/text2soled/text2soled multitext "- Do not switch off! -@s2c" "$1" "$2" "$3" "$4" "$5" "$6"
@@ -58,11 +59,38 @@ print_dd_progress() {
     done    
 } 
 
-
 check_preconditions() {
+    pretty "Starting upgrade..." "" "" "Starting upgrade..." ""
+    sleep 5
+    pretty "Do NOT turn off" "till complete..." "" "Do NOT turn off" "till complete..."
+    sleep 5
+
     pretty "Checking preconditions..." "" "" "Checking" "preconditions..."
     [ -z "$IP" ] && quit "Usage:" "$0 <IP-of-ePC>" "" "wrong usage" ""
+    rm /root/.ssh/known_hosts &> /dev/null
     ping -c1 $IP 1>&2 > /dev/null || quit "No connection!" "ePC is not reachable at" "$IP, update failed." "Update failed." "ePC not reachable."
+    sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "exit" &> /dev/null || quit "Can't login into Windows" "Update failed." "" "Update failed." "no win login"
+
+    #get SSD_SIZE of the ePC
+    SSD_SIZE=$(sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "wmic diskdrive get size")
+    SSD_SIZE=$(echo "$SSD_SIZE" | sed -n 2p)        # Size Info is in the second line
+    SSD_SIZE=${SSD_SIZE//[ $'\001'-$'\037']}        # remove possible DOS carriage return characters
+    SSD_SIZE=$((SSD_SIZE / 1000000000))
+
+    # switch from Windows to Ubuntu
+    sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP \
+        "mountvol p: /s & p: & cd nonlinear & del win & echo hello > linux & shutdown -r -t 0 -f" &> /dev/null \
+        || quit "Can't switch to Linux" "Update failed." "" "Update failed" "no lin switch"
+
+    # wait for user login response, time out??
+    while true; do
+        rm /root/.ssh/known_hosts &> /dev/null;
+        if executeAsRoot "exit"; then
+            break
+        fi
+        sleep 1
+    done
+
     if [ $SSD_SIZE -eq 32 ]; then
         pretty "ePC SSD Size" "$SSD_SIZE GB" "" "ePC SSD Size" "$SSD_SIZE GB"
         executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 42049536" || quit "Unexpected partition" "ePC partition 5 is not at" "expected position, update failed." "Update failed." "partition error"
@@ -209,7 +237,6 @@ reboot_device() {
     done
 
     pretty "" "Cleaning up..." "" "Cleaning Up..." ""
-    rm /root/.ssh/known_hosts &> /dev/null
     executeAsRoot "sfdisk --delete /dev/sda 4" || quit "" "Failed clean up!" "del_sda4" "Failed clean up!" "del_sda4"
     executeAsRoot "sfdisk --delete /dev/sda 5" || quit "" "Failed clean up!" "del_sda5" "Failed clean up!" "del_sda5"
     executeAsRoot "echo \";\" | sfdisk -a --no-reread /dev/sda" || quit "" "Failed clean up!" "mk_part" "Failed clean up!" "mk_part"
@@ -226,6 +253,8 @@ reboot_device() {
     done
 
     pretty "" "Your C15 has been" "successfully upgraded!" "Your C15 has been" "successfully upgraded."
+    sleep 2
+    pretty "Insert Update stick" "with Update Vers. $UPDATE_VERS" "and reboot for complition..." "Insert Update stick" "with Update Vers. $UPDATE_VERS"
 }
 
 start_playground() {
@@ -234,18 +263,18 @@ start_playground() {
 }
 
 main() {
-    #check_preconditions
-    #tear_down_playground
-    #unmount_doomed
-    #create_partitions
-    #copy_partition_content
-    #dd_partitions
-    #unmount_tmp
-    #copy_partition_3_content
-    #dd_partition_3
-    #install_grub
+    check_preconditions
+    tear_down_playground
+    unmount_doomed
+    create_partitions
+    copy_partition_content
+    dd_partitions
+    unmount_tmp
+    copy_partition_3_content
+    dd_partition_3
+    install_grub
     reboot_device
-    #start_playground
+    start_playground
     exit 0
 }
 
