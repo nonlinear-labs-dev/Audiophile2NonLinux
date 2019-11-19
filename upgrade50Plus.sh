@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IP=$1
+IP=192.168.10.10
 SSD_SIZE=0
 PART5POS=0
 PART5SIZE=0
