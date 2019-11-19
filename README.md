@@ -31,7 +31,7 @@ Options:\
 -B:   Specify the Branch\
 -b:  	disable building BlackBeagleBone-Bridge with OFF\
 -a:  	disable building Audio-Engine with OFF\
--p:  	disable building Playground with OFF\
+-p:  	disable building Playground with OFF
 
 The Branch MUST be set. Disabling builds is optional. By default everything within the C15 Project will be built.
 
