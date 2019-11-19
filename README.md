@@ -27,11 +27,11 @@ sudo su
 cd /
 ./buildNonlinearLabsBinaries.sh -B <BRANCHNAME> -b <ON/OFF> -a <ON/OFF> <-p ON/OFF>
 ```
-Options:
--B:   Specify the Branch
--b:  	disable building BlackBeagleBone-Bridge with OFF
--a:  	disable building Audio-Engine with OFF
--p:  	disable building Playground with OFF
+Options:\
+-B:   Specify the Branch\
+-b:  	disable building BlackBeagleBone-Bridge with OFF\
+-a:  	disable building Audio-Engine with OFF\
+-p:  	disable building Playground with OFF\
 
 The Branch MUST be set. Disabling builds is optional. By default everything within the C15 Project will be built.
 
