@@ -57,30 +57,36 @@ print_dd_progress() {
         pretty "Dumping..." "partition $1 content" "$OUT Bytes." "Dumping partition $1" "$OUT Bytes."
         sleep 1 
     done    
-} 
+}
 
-check_preconditions() {
-    pretty "Starting upgrade..." "" "" "Starting upgrade..." ""
-    sleep 5
-    pretty "Do NOT turn off" "till complete..." "" "Do NOT turn off" "till complete..."
-    sleep 5
-
-    pretty "Checking preconditions..." "" "" "Checking" "preconditions..."
+check_connection() {
+    pretty "Checking connection..." "ePC - BBB" "" "Checking connection..." "ePC - BBB"
     [ -z "$IP" ] && quit "Usage:" "$0 <IP-of-ePC>" "" "wrong usage" ""
-    rm /root/.ssh/known_hosts &> /dev/null
     ping -c1 $IP 1>&2 > /dev/null || quit "No connection!" "ePC is not reachable at" "$IP, update failed." "Update failed." "ePC not reachable."
-    sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "exit" &> /dev/null || quit "Can't login into Windows" "Update failed." "" "Update failed." "no win login"
+    rm /root/.ssh/known_hosts &> /dev/null
+    sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "exit" &> /dev/null \
+        || quit "Can't login into Windows" "Update failed." "" "Update failed." "No Windows login"
+    pretty "Checking connection..." "done." "" "Checking connection..." "done."
+}
 
-    #get SSD_SIZE of the ePC
-    SSD_SIZE=$(sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "wmic diskdrive get size")
+get_ssd_size() {
+    pretty "Getting hardware info..." "" "" "Getting hardware info..." ""
+    SSD_SIZE=$(sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "wmic diskdrive get size") \
+        || quit "Can't retreive" "hardware info" "" "Can't retreive" "hardware info"
     SSD_SIZE=$(echo "$SSD_SIZE" | sed -n 2p)        # Size Info is in the second line
     SSD_SIZE=${SSD_SIZE//[ $'\001'-$'\037']}        # remove possible DOS carriage return characters
     SSD_SIZE=$((SSD_SIZE / 1000000000))
+    if ! [[ $SSD_SIZE =~ ^[0-9]+$ ]]; then
+        quit "SSD size is NaN" "" "" "SSD size" "is NaN"
+    fi
+    pretty "Getting hardware info..." "done." "" "Getting hardware info..." "done."
+}
 
-    # switch from Windows to Ubuntu
+switch_from_win_to_ubuntu() {
+    pretty "Switching OS..." "win -> ubuntu" "" "Switching OS..." "win -> ubuntu"
     sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP \
         "mountvol p: /s & p: & cd nonlinear & del win & echo hello > linux & shutdown -r -t 0 -f" &> /dev/null \
-        || quit "Can't switch to Linux" "Update failed." "" "Update failed" "no lin switch"
+        || quit "Can't switch OS..." "Check failed." "" "Check failed." "OS switch fail"
 
     # wait for user login response, time out??
     while true; do
@@ -90,28 +96,29 @@ check_preconditions() {
         fi
         sleep 1
     done
+    pretty "Switching OS..." "done." "" "Switching OS..." "done."
+}
 
+check_preconditions() {
+    pretty "Checking preconditions..." "" "" "Checking" "preconditions..."
     if [ $SSD_SIZE -eq 32 ]; then
         pretty "ePC SSD Size" "$SSD_SIZE GB" "" "ePC SSD Size" "$SSD_SIZE GB"
         executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 42049536" || quit "Unexpected partition" "ePC partition 5 is not at" "expected position, update failed." "Update failed." "partition error"
         executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 20482422" || quit "Unexpected partition" "ePC partition 5 is not of" "expected size, update failed." "Update failed." "partition error"
         PART5POS=42049536
         PART5SIZE=20482422
-        echo "PART5POS $PART5POS PART5SIZE $PART5SIZE"
     elif [ $SSD_SIZE -eq 64 ]; then
         pretty "ePC SSD Size" "$SSD_SIZE GB" "" "ePC SSD Size" "$SSD_SIZE GB"
         executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 62531584" || quit "Unexpected partition" "ePC partition 5 is not at" "expected position, update failed." "Update failed." "partition error"
         executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 62513152" || quit "Unexpected partition" "ePC partition 5 is not of" "expected size, update failed." "Update failed." "partition error"
         PART5POS=62531584
         PART5SIZE=62513152
-        echo "PART5POS $PART5POS PART5SIZE $PART5SIZE"
     elif [ $SSD_SIZE -eq 120 ]; then
         pretty "ePC SSD Size" "$SSD_SIZE GB" "" "ePC SSD Size" "$SSD_SIZE GB"
         executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 62531584" || quit "Unexpected partition" "ePC partition 5 is not at" "expected position, update failed." "Update failed." "partition error"
         executeAsRoot "sfdisk -d /dev/sda | grep sda5 | grep 62513152" || quit "Unexpected partition" "ePC partition 5 is not of" "expected size, update failed." "Update failed." "partition error"
         PART5POS=62531584
         PART5SIZE=62513152
-        echo "PART5POS $PART5POS PART5SIZE $PART5SIZE"
     else
         pretty "ePC SSD Size mismatch" "" "" "ePC SSD Size" "mismatch"
     fi
@@ -223,8 +230,8 @@ install_grub() {
     pretty "Finalization done." "" "" "Finalization done." "" 
 }
 
-reboot_device() {
-    pretty "Rebooting ePC..." "Please wait a while" "the ePC is rebooting." "Rebooting ePC..." "Please wait."
+merge_partitions() {
+    pretty "Clean up..." "...merging partitions." "" "Clean up..." "...merging."
     executeAsRoot "reboot"
     sleep 5
 
@@ -236,11 +243,15 @@ reboot_device() {
         sleep 1
     done
 
-    pretty "" "Cleaning up..." "" "Cleaning Up..." ""
     executeAsRoot "sfdisk --delete /dev/sda 4" || quit "" "Failed clean up!" "del_sda4" "Failed clean up!" "del_sda4"
     executeAsRoot "sfdisk --delete /dev/sda 5" || quit "" "Failed clean up!" "del_sda5" "Failed clean up!" "del_sda5"
     executeAsRoot "echo \";\" | sfdisk -a --no-reread /dev/sda" || quit "" "Failed clean up!" "mk_part" "Failed clean up!" "mk_part"
-    executeAsRoot "echo \"y\" | mkfs.ext4 /dev/sda4" || "" "Failed clean up!" "mkfs" "Failed clean up!" "mkfs"
+    executeAsRoot "echo \"y\" | mkfs.ext4 /dev/sda4" || quit "" "Failed clean up!" "mkfs" "Failed clean up!" "mkfs"
+    pretty "Clean up..." "...done." "" "Clean up..." "...done."
+}
+
+reboot_device() {
+    pretty "Rebooting ePC..." "Please wait a while" "the ePC is rebooting." "Rebooting ePC..." "Please wait."
     executeAsRoot "reboot"
     sleep 5
 
@@ -263,6 +274,14 @@ start_playground() {
 }
 
 main() {
+    pretty "Starting upgrade..." "" "" "Starting upgrade..." ""
+    sleep 2
+    pretty "Do NOT turn off" "till complete..." "" "Do NOT turn off" "till complete..."
+    sleep 3
+
+    check_connection
+    get_ssd_size
+    switch_from_win_to_ubuntu
     check_preconditions
     tear_down_playground
     unmount_doomed
@@ -273,6 +292,7 @@ main() {
     copy_partition_3_content
     dd_partition_3
     install_grub
+    merge_partitions
     reboot_device
     start_playground
     exit 0

@@ -29,7 +29,7 @@ cd /
 ```
 Options:\
 -B:   Specify the Branch\
--b:  	disable building BlackBeagleBone-Bridge with OFF\
+-b:  	disable building BeagleBoneBlack-Bridge with OFF\
 -a:  	disable building Audio-Engine with OFF\
 -p:  	disable building Playground with OFF
 
