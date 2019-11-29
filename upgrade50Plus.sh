@@ -174,7 +174,7 @@ switch_from_win_to_ubuntu() {
     while true; do
         rm /root/.ssh/known_hosts 1>&2 > /dev/null;
         executeAsRoot "exit"
-        [ $? -eq 0] && break
+        [ $? -eq 0 ] && break
         sleep 1
         ((counter++))
         [ $counter -eq 120 ] && { quit "Reboot taking too long..." "timed out" "" "Reboot fail..." "timed out"; break; }
@@ -295,7 +295,7 @@ merge_partitions() {
     while true; do
         rm /root/.ssh/known_hosts 1>&2 > /dev/null;
         executeAsRoot "exit"
-        [ $? -eq 0] && break
+        [ $? -eq 0 ] && break
         sleep 1
         ((counter++))
         [ $counter -eq 120 ] && { quit "Reboot taking too long..." "timed out" " " "Reboot fail..." "timed out"; break; }
@@ -316,7 +316,7 @@ reboot_device() {
     while true; do
         rm /root/.ssh/known_hosts 1>&2 > /dev/null;
         executeAsRoot "exit"
-        [ $? -eq 0] && break
+        [ $? -eq 0 ] && break
         sleep 1
         ((counter++))
         [ $counter -eq 120 ] && { quit "Reboot taking too long..." "timed out" "" "Reboot fail..." "timed out"; break; }
