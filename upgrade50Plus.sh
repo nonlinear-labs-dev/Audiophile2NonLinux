@@ -8,6 +8,21 @@ IP=192.168.10.10
 SSD_SIZE=0
 PART_POS=0
 PART_SIZE=0
+TIMEOUT=60
+
+wait4response() {
+    COUNTER=0
+    while true; do
+        rm /root/.ssh/known_hosts 1>&2 > /dev/null;
+        executeAsRoot "exit"
+        [ $? -eq 0 ] && break
+
+        sleep 1
+        ((COUNTER++))
+        echo "awaiting reboot ... $COUNTER/$TIMEOUT"
+        [ $COUNTER -eq $TIMEOUT ] && { quit "Reboot taking too long..." "timed out" "" "Reboot fail..." "timed out"; break; }
+    done
+}
 
 t2s() {
     /nonlinear/text2soled/text2soled multitext "- Do not switch off! -@s2c" "$1" "$2" "$3" "$4" "$5" "$6"
@@ -25,12 +40,12 @@ pretty() {
 }
 
 executeAsRoot() {
-    echo "sscl" | sshpass -p 'sscl' ssh -o StrictHostKeyChecking=no sscl@$IP "sudo -S /bin/bash -c '$1' 1>&2 > /dev/null"
+    echo "sscl" | sshpass -p 'sscl' ssh -o ConnectionAttempts=1 -o ConnectTimeout=1 -o StrictHostKeyChecking=no sscl@$IP "sudo -S /bin/bash -c '$1' 1>&2 > /dev/null"
     return $?
 }
 
 executeOnWin() {
-    sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "$1" 1>&2 > /dev/null
+    sshpass -p 'TEST' ssh -o ConnectionAttempts=1 -o ConnectTimeout=1 -o StrictHostKeyChecking=no TEST@$IP "$1" 1>&2 > /dev/null
     return $?
 }
 
@@ -169,16 +184,7 @@ switch_from_win_to_ubuntu() {
     pretty "Switching OS..." "win -> ubuntu" "" "Switching OS..." "win -> ubuntu"
     executeOnWin "mountvol p: /s & p: & cd nonlinear & del win & echo hello > linux & shutdown -r -t 0 -f" \
         || quit "Can't switch OS..." "Check failed." "" "Check failed." "OS switch fail"
-
-    counter=0
-    while true; do
-        rm /root/.ssh/known_hosts 1>&2 > /dev/null;
-        executeAsRoot "exit"
-        [ $? -eq 0 ] && break
-        sleep 1
-        ((counter++))
-        [ $counter -eq 120 ] && { quit "Reboot taking too long..." "timed out" "" "Reboot fail..." "timed out"; break; }
-    done
+    wait4response
     pretty "Switching OS..." "done." "" "Switching OS..." "done."
 }
 
@@ -290,16 +296,8 @@ install_grub() {
 merge_partitions() {
     pretty "Clean up..." "...merging partitions." "" "Clean up..." "...merging."
     executeAsRoot "reboot"
-
-    counter=0
-    while true; do
-        rm /root/.ssh/known_hosts 1>&2 > /dev/null;
-        executeAsRoot "exit"
-        [ $? -eq 0 ] && break
-        sleep 1
-        ((counter++))
-        [ $counter -eq 120 ] && { quit "Reboot taking too long..." "timed out" " " "Reboot fail..." "timed out"; break; }
-    done
+    wait4response
+    pretty "Switching OS..." "done." "" "Switching OS..." "done."
 
     executeAsRoot "sfdisk --delete /dev/sda 4" || quit "" "Failed clean up!" "del_sda4" "Failed clean up!" "del_sda4"
     executeAsRoot "sfdisk --delete /dev/sda 5" || quit "" "Failed clean up!" "del_sda5" "Failed clean up!" "del_sda5"
@@ -311,17 +309,7 @@ merge_partitions() {
 reboot_device() {
     pretty "Rebooting ePC..." "Please wait a while" "the ePC is rebooting." "Rebooting ePC..." "Please wait."
     executeAsRoot "reboot"
-
-    counter=0
-    while true; do
-        rm /root/.ssh/known_hosts 1>&2 > /dev/null;
-        executeAsRoot "exit"
-        [ $? -eq 0 ] && break
-        sleep 1
-        ((counter++))
-        [ $counter -eq 120 ] && { quit "Reboot taking too long..." "timed out" "" "Reboot fail..." "timed out"; break; }
-    done
-
+    wait4response
     pretty "" "Your C15 has been" "successfully upgraded!" "Your C15 has been" "successfully upgraded."
 }
 
