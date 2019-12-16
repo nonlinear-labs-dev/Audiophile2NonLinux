@@ -1,8 +1,13 @@
 #!/bin/bash
 #
 # Authours:     HH, AS
+# Note:         The Error Messages are stored on the BBB. Use journalctl | grep ePC-Upgrade to show these
+#
 # IMPORTANT:    The OS-Overlay is stored in the 3rd Partition (./p3.raw.gz)
 #               and should be of the last release for the actual update
+# TODO:         Check if sshpass is under /nonlinear/sshpass and executable
+#               Check if the path for sshpass is set!
+#               Merge Partitions seems only to work for 64/120 GB SSD_SIZE, 32GB SSD fail
 
 IP=192.168.10.10
 SSD_SIZE=0
@@ -51,7 +56,7 @@ executeOnWin() {
 
 quit() {
     pretty "$1" "$2" "$3" "$4" "$5" "$6"
-    echo "$1 $2 $3" | systemd-cat -t "ePC-Upgrade"      # save error ouputs to journal
+    echo "$1 $2 $3" | systemd-cat -t "ePC-Upgrade"          # save error ouputs to journal
     exit 1
 }
 
@@ -87,6 +92,15 @@ check_connection() {
     pretty "Checking connection..." "ePC - BBB" "" "Checking connection..." "ePC - BBB"
     [ -z "$IP" ] && quit "Usage:" "$0 <IP-of-ePC>" "" "wrong usage" ""
     ping -c1 $IP 1>&2 > /dev/null || quit "No connection!" "ePC is not reachable at" "$IP, update failed." "Update failed." "ePC not reachable."
+    if [ ! -x /nonlinear/sshpass/sshpass ]; then
+        rm -rf /nonlinear/sshpass/
+        mkdir /nonlinear/sshpass/
+        cp /mnt/usb-stick/sshpass/sshpass /nonlinear/sshpass/
+        chmod +x /nonlinear/sshpass/sshpass
+        PATH=$PATH:/nonlinear/sshpass
+    fi
+
+
     rm /root/.ssh/known_hosts 1>&2 > /dev/null
     executeOnWin "exit" || quit "Can't login into Windows" "Update failed." "" "Update failed." "No Windows login"
     pretty "Checking connection..." "done." "" "Checking connection..." "done."
@@ -109,7 +123,8 @@ get_hdw_info() {
     # TracksPerCylinder=255
 
     pretty "Getting hardware info..." "" "" "Getting hardware info..." ""
-    SSD_SIZE=$(sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size")
+    # SSD_SIZE=$(sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size")
+    SSD_SIZE=$(executeOnWin "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size")
     SSD_SIZE=$(echo "$SSD_SIZE" | sed -n 2p)        # Size Info is in the second line
     SSD_SIZE=${SSD_SIZE//[ $'\001'-$'\037']}        # remove possible DOS carriage return characters
     SSD_SIZE=$((SSD_SIZE / 1000000000))
