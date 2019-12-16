@@ -92,15 +92,16 @@ check_connection() {
     pretty "Checking connection..." "ePC - BBB" "" "Checking connection..." "ePC - BBB"
     [ -z "$IP" ] && quit "Usage:" "$0 <IP-of-ePC>" "" "wrong usage" ""
     ping -c1 $IP 1>&2 > /dev/null || quit "No connection!" "ePC is not reachable at" "$IP, update failed." "Update failed." "ePC not reachable."
-    if [ ! -x /nonlinear/sshpass/sshpass ]; then
-        rm -rf /nonlinear/sshpass/
-        mkdir /nonlinear/sshpass/
-        cp /mnt/usb-stick/sshpass/sshpass /nonlinear/sshpass/
-        chmod +x /nonlinear/sshpass/sshpass
-        PATH=$PATH:/nonlinear/sshpass
+    if [ ! -x /nonlinear/utilities/sshpass ]; then
+        mkdir /nonlinear/utilities
+        cp /mnt/usb-stick/utilities/sshpass /nonlinear/utilities/
+        chmod +x /nonlinear/utilities/sshpass
     fi
-
-
+    echo $PATH | grep sshpass 1>&2 > /dev/null
+    if [ $? -eq 1 ]
+        export PATH=$PATH:/nonlinear/utilities
+        cp /mnt/usb-stick/utilities/add_sshpass_path.sh /etc/profile.d/
+    fi
     rm /root/.ssh/known_hosts 1>&2 > /dev/null
     executeOnWin "exit" || quit "Can't login into Windows" "Update failed." "" "Update failed." "No Windows login"
     pretty "Checking connection..." "done." "" "Checking connection..." "done."
@@ -123,8 +124,8 @@ get_hdw_info() {
     # TracksPerCylinder=255
 
     pretty "Getting hardware info..." "" "" "Getting hardware info..." ""
-    # SSD_SIZE=$(sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size")
-    SSD_SIZE=$(executeOnWin "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size")
+    SSD_SIZE=$(sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size")
+    # SSD_SIZE=$(executeOnWin "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size") # so geht das nicht leider ...
     SSD_SIZE=$(echo "$SSD_SIZE" | sed -n 2p)        # Size Info is in the second line
     SSD_SIZE=${SSD_SIZE//[ $'\001'-$'\037']}        # remove possible DOS carriage return characters
     SSD_SIZE=$((SSD_SIZE / 1000000000))
