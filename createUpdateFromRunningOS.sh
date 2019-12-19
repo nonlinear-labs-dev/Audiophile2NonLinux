@@ -14,6 +14,13 @@ set_up() {
     mkdir -p /nloverlay/update-scratch/update
     mkdir -p /nloverlay/runtime-overlay
 
+    if [ `find /nloverlay/os-overlay | wc -l` -ne "1" ]; then
+        echo "This system has been already updated (there is content in /nloverlay/os-overlay),"
+        echo "so it is not suitable for performing this script."
+        echo "Please run it on fresh installations only."
+        return 1
+    fi
+
     echo "Setting up done."
     return 0
 }
