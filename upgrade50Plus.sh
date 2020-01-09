@@ -5,15 +5,15 @@
 #
 # IMPORTANT:    The OS-Overlay is stored in the 3rd Partition (./p3.raw.gz)
 #               and should be of the last release for the actual update
-# TODO:         Check if sshpass is under /nonlinear/sshpass and executable
-#               Check if the path for sshpass is set!
-#               Merge Partitions seems only to work for 64/120 GB SSD_SIZE, 32GB SSD fail
+# TODO:         Merge Partitions seems only to work for 64/120 GB SSD_SIZE, 32GB SSD fail
 
 IP=192.168.10.10
 SSD_SIZE=0
 PART_POS=0
 PART_SIZE=0
 TIMEOUT=60
+SSHPASS_PATH="/nonlinear/utilities/"
+CURRENT_PATH="$PWD"
 
 wait4response() {
     COUNTER=0
@@ -45,12 +45,12 @@ pretty() {
 }
 
 executeAsRoot() {
-    echo "sscl" | sshpass -p 'sscl' ssh -o ConnectionAttempts=1 -o ConnectTimeout=1 -o StrictHostKeyChecking=no sscl@$IP "sudo -S /bin/bash -c '$1' 1>&2 > /dev/null"
+    echo "sscl" | $SSHPASS_PATH/sshpass -p 'sscl' ssh -o ConnectionAttempts=1 -o ConnectTimeout=1 -o StrictHostKeyChecking=no sscl@$IP "sudo -S /bin/bash -c '$1' 1>&2 > /dev/null"
     return $?
 }
 
 executeOnWin() {
-    sshpass -p 'TEST' ssh -o ConnectionAttempts=1 -o ConnectTimeout=1 -o StrictHostKeyChecking=no TEST@$IP "$1" 1>&2 > /dev/null
+    $SSHPASS_PATH/sshpass -p 'TEST' ssh -o ConnectionAttempts=1 -o ConnectTimeout=1 -o StrictHostKeyChecking=no TEST@$IP "$1" 1>&2 > /dev/null
     return $?
 }
 
@@ -70,8 +70,8 @@ print_scp_progress() {
     executeAsRoot "touch $2"
 
     while [ ! "$TARGET_SIZE_BYTES" = "$SOURCE_SIZE_BYTES" ]; do
-        TARGET_SIZE=$(sshpass -p 'sscl' ssh sscl@$IP "ls -lah $3 | awk {'print \$5'}")
-        TARGET_SIZE_BYTES=$(sshpass -p 'sscl' ssh sscl@$IP "ls -la $3 | awk {'print \$5'}")
+        TARGET_SIZE=$($SSHPASS_PATH/sshpass -p 'sscl' ssh sscl@$IP "ls -lah $3 | awk {'print \$5'}")
+        TARGET_SIZE_BYTES=$($SSHPASS_PATH/sshpass -p 'sscl' ssh sscl@$IP "ls -la $3 | awk {'print \$5'}")
         pretty "Copying..." "partition $1 content" "$TARGET_SIZE of $SOURCE_SIZE" "Copying partition $1" "$TARGET_SIZE / $SOURCE_SIZE"
         sleep 1
     done
@@ -92,15 +92,18 @@ check_connection() {
     pretty "Checking connection..." "ePC - BBB" "" "Checking connection..." "ePC - BBB"
     [ -z "$IP" ] && quit "Usage:" "$0 <IP-of-ePC>" "" "wrong usage" ""
     ping -c1 $IP 1>&2 > /dev/null || quit "No connection!" "ePC is not reachable at" "$IP, update failed." "Update failed." "ePC not reachable."
-    if [ ! -x /nonlinear/utilities/sshpass ]; then
-        mkdir /nonlinear/utilities
-        cp /mnt/usb-stick/utilities/sshpass /nonlinear/utilities/
-        chmod +x /nonlinear/utilities/sshpass
+
+    if [ ! -x $SSHPASS_PATH/sshpass ]; then
+        quit "sshpass missing..." "" "update failed." "sshpass missing..." "update failed."
     fi
-    echo $PATH | grep sshpass 1>&2 > /dev/null
-    if [ $? -eq 1 ]
-        export PATH=$PATH:/nonlinear/utilities
-        cp /mnt/usb-stick/utilities/add_sshpass_path.sh /etc/profile.d/
+
+    if [ ! -x  $SSHPASS_PATH/sshpass ]; then
+        if [ ! -d "$SSHPASS_PATH"  ]; then
+            mkdir $SSHPASS_PATH
+        fi
+        cp $CURRENT_PATH/utilities/sshpass /nonlinear/utilities/
+        chmod +x /nonlinear/utilities/sshpass
+        rm /root/.ssh/known_hosts
     fi
     rm /root/.ssh/known_hosts 1>&2 > /dev/null
     executeOnWin "exit" || quit "Can't login into Windows" "Update failed." "" "Update failed." "No Windows login"
@@ -124,7 +127,7 @@ get_hdw_info() {
     # TracksPerCylinder=255
 
     pretty "Getting hardware info..." "" "" "Getting hardware info..." ""
-    SSD_SIZE=$(sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size")
+    SSD_SIZE=$($SSHPASS_PATH/sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size")
     # SSD_SIZE=$(executeOnWin "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size") # so geht das nicht leider ...
     SSD_SIZE=$(echo "$SSD_SIZE" | sed -n 2p)        # Size Info is in the second line
     SSD_SIZE=${SSD_SIZE//[ $'\001'-$'\037']}        # remove possible DOS carriage return characters
@@ -248,10 +251,10 @@ copy_partition_content() {
     executeAsRoot "chmod 777 /mnt" || quit "Copying failed." "Could not chmod partition 3." "Update failed." "Update failed:" "chmod part 3 failed"
     
     print_scp_progress "1" ./p1.raw.gz /mnt/p1.raw.gz &
-    sshpass -p 'sscl' scp ./p1.raw.gz sscl@$IP:/mnt || quit "Copying failed." "Could not copy p1.raw.gz." "Update failed." "Update failed:" "copy part 1 failed"
+    $SSHPASS_PATH/sshpass -p 'sscl' scp ./p1.raw.gz sscl@$IP:/mnt || quit "Copying failed." "Could not copy p1.raw.gz." "Update failed." "Update failed:" "copy part 1 failed"
     
     print_scp_progress "2" ./p2.raw.gz /mnt/p2.raw.gz &
-    sshpass -p 'sscl' scp ./p2.raw.gz sscl@$IP:/mnt || quit "Copying failed." "Could not copy p2.raw.gz." "Update failed." "Update failed:" "copy part 2 failed"
+    $SSHPASS_PATH/sshpass -p 'sscl' scp ./p2.raw.gz sscl@$IP:/mnt || quit "Copying failed." "Could not copy p2.raw.gz." "Update failed." "Update failed:" "copy part 2 failed"
 
     pretty "Copying..." "partitions content done." "" "Copying..." "partitions done."
 }
@@ -278,7 +281,7 @@ unmount_tmp() {
 copy_partition_3_content() {
     pretty "Copying..." "...partition 3 content" "to temporary storage." "Copying" "partition 3."
     print_scp_progress "3" ./p3.raw.gz /mnt/p3.raw.gz &
-    sshpass -p 'sscl' scp ./p3.raw.gz sscl@$IP:/mnt || quit "Copying failed." "Could not copy partition 3" "content onto device. Update failed" "Update Failed:" "copy part 3 failed"
+    $SSHPASS_PATH/sshpass -p 'sscl' scp ./p3.raw.gz sscl@$IP:/mnt || quit "Copying failed." "Could not copy partition 3" "content onto device. Update failed" "Update Failed:" "copy part 3 failed"
     pretty "Copying..." "...partition 3 content" "done." "Copying" "part 3 done."
 }
 
