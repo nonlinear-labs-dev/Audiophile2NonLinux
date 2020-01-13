@@ -6,13 +6,14 @@
 # IMPORTANT:    The OS-Overlay is stored in the 3rd Partition (./p3.raw.gz)
 #               and should be of the last release for the actual update
 # TODO:         Merge Partitions seems only to work for 64/120 GB SSD_SIZE, 32GB SSD fail
+#               text2soled does not work at all
 
 IP=192.168.10.10
 SSD_SIZE=0
 PART_POS=0
 PART_SIZE=0
 TIMEOUT=60
-SSHPASS_PATH="/nonlinear/utilities/"
+SSHPASS_PATH="/nonlinear/utilities"
 CURRENT_PATH="$PWD"
 
 wait4response() {
@@ -94,15 +95,11 @@ check_connection() {
     ping -c1 $IP 1>&2 > /dev/null || quit "No connection!" "ePC is not reachable at" "$IP, update failed." "Update failed." "ePC not reachable."
 
     if [ ! -x $SSHPASS_PATH/sshpass ]; then
-        quit "sshpass missing..." "" "update failed." "sshpass missing..." "update failed."
-    fi
-
-    if [ ! -x  $SSHPASS_PATH/sshpass ]; then
         if [ ! -d "$SSHPASS_PATH"  ]; then
             mkdir $SSHPASS_PATH
         fi
-        cp $CURRENT_PATH/utilities/sshpass /nonlinear/utilities/
-        chmod +x /nonlinear/utilities/sshpass
+        cp $CURRENT_PATH/utilities/sshpass $SSHPASS_PATH
+        chmod +x $SSHPASS_PATH/sshpass
         rm /root/.ssh/known_hosts
     fi
     rm /root/.ssh/known_hosts 1>&2 > /dev/null
@@ -128,7 +125,6 @@ get_hdw_info() {
 
     pretty "Getting hardware info..." "" "" "Getting hardware info..." ""
     SSD_SIZE=$($SSHPASS_PATH/sshpass -p 'TEST' ssh -o StrictHostKeyChecking=no TEST@$IP "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size")
-    # SSD_SIZE=$(executeOnWin "wmic diskdrive where (DeviceID='\\\\\\\\.\\\\PHYSICALDRIVE0') get size") # so geht das nicht leider ...
     SSD_SIZE=$(echo "$SSD_SIZE" | sed -n 2p)        # Size Info is in the second line
     SSD_SIZE=${SSD_SIZE//[ $'\001'-$'\037']}        # remove possible DOS carriage return characters
     SSD_SIZE=$((SSD_SIZE / 1000000000))
